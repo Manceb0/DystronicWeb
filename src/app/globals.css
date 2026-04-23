@@ -68,3 +68,31 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-accent-purple);
 }
+
+@keyframes float {
+  0% { transform: translate(-50%, -50%); }
+  50% { transform: translate(-50%, calc(-50% - 20px)); }
+  100% { transform: translate(-50%, -50%); }
+}
+
+@keyframes float-simple {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float-center {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-1 {
+  animation: float-simple 7s ease-in-out infinite 1s;
+}
+
+.animate-float-2 {
+  animation: float-simple 5s ease-in-out infinite 0.5s;
+}
+
+.animate-float-3 {
+  animation: float-simple 4s ease-in-out infinite 1.5s;
+}

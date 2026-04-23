@@ -28,8 +28,8 @@ export default function KitsPage() {
                                     {kit.level}
                                 </span>
                             </div>
-                            <div className="text-gray-700 font-mono text-xl transform group-hover:scale-110 transition-transform">
-                                [ KIT IMGS ]
+                            <div className="absolute inset-0 w-full h-full z-0">
+                                <img src={kit.image} alt={kit.name} className="w-full h-full object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" />
                             </div>
                         </div>
 

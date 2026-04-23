@@ -36,6 +36,10 @@ export default function KitDetail() {
                 {/* Left Side: Kit Presentation */}
                 <div className="lg:col-span-2">
                     <div className="glass-panel p-8 mb-8 border-t-2 border-t-[#ff5e00]">
+                        <div className="w-full h-64 bg-[#050507] border border-white/5 rounded-sm mb-8 relative flex items-center justify-center p-4 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 pointer-events-none"></div>
+                            <img src={kit.image} alt={kit.name} className="w-full h-full object-contain hover:scale-110 transition-transform duration-700 relative z-0" />
+                        </div>
                         <div className="flex justify-between items-start mb-6">
                             <h1 className="text-3xl md:text-4xl font-bold font-mono text-white max-w-xl">{kit.name}</h1>
                             <span className={`text-xs font-bold px-3 py-1 rounded-sm uppercase tracking-widest ${kit.level === 'Beginner' ? 'bg-[#39ff14]/20 text-[#39ff14] border border-[#39ff14]/50' : 'bg-[#ffcc00]/20 text-[#ffcc00] border border-[#ffcc00]/50'}`}>

@@ -50,9 +50,9 @@ export default function ProductDetail() {
                             <span key={tag} className="bg-white/5 border border-white/10 text-[10px] text-gray-300 font-bold px-3 py-1 rounded-sm uppercase tracking-widest">{tag}</span>
                         ))}
                     </div>
-                    {/* Placeholder for image */}
-                    <div className="w-3/4 h-3/4 border-2 border-dashed border-gray-800 rounded-sm flex items-center justify-center text-gray-700 font-mono text-2xl">
-                        [ {product.image} ]
+                    {/* Product Image */}
+                    <div className="w-full h-full absolute inset-0 z-0 p-8">
+                        <img src={product.image} alt={product.name} className="w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500" />
                     </div>
                 </div>
 

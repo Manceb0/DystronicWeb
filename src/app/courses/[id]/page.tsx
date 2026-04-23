@@ -36,8 +36,11 @@ export default function CourseDetail() {
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-8">
                     <div className="glass-panel p-8 md:p-12 relative overflow-hidden">
-                        {/* Decor grid */}
-                        <div className="absolute right-0 top-0 w-1/3 h-full bg-[#ffcc00]/5" style={{ backgroundImage: "linear-gradient(#ffcc00 1px, transparent 1px), linear-gradient(90deg, #ffcc00 1px, transparent 1px)", backgroundSize: "20px 20px", opacity: 0.1 }}></div>
+                        {/* Course Image Background */}
+                        <div className="absolute right-0 top-0 w-1/2 h-full opacity-30 mask-image-to-l pointer-events-none">
+                            <img src={course.image} alt={course.title} className="w-full h-full object-cover object-right" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#050507] via-transparent to-transparent"></div>
+                        </div>
 
                         <div className="relative z-10">
                             <div className="flex items-center gap-3 mb-6">

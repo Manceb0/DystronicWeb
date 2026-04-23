@@ -29,8 +29,8 @@ export default function CoursesPage() {
                                     {course.level}
                                 </span>
                             </div>
-                            <div className="text-gray-700 font-mono text-sm transform group-hover:scale-110 transition-transform relative z-0">
-                                [ CRS: {course.image.split('/')[2]} ]
+                            <div className="absolute inset-0 w-full h-full z-0">
+                                <img src={course.image} alt={course.title} className="w-full h-full object-cover opacity-70 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" />
                             </div>
 
                             <div className="absolute bottom-2 left-2 z-20 flex gap-3 text-xs text-gray-300 font-mono">

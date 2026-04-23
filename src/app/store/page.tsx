@@ -91,10 +91,8 @@ export default function StoreCatalog() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
                                     <span className="text-xs font-mono tracking-widest text-[#00f0ff] uppercase bg-black/50 px-3 py-1 border border-[#00f0ff]/30">Quick View</span>
                                 </div>
-                                {/* Mock image placeholder using background */}
-                                <div className="w-full h-full border border-dashed border-gray-800 rounded-sm flex items-center justify-center text-gray-800 font-mono text-sm group-hover:border-[#00f0ff]/30 transition-colors bg-[#0b1122]/30">
-                                    {comp.image.replace("/mock/", "")}
-                                </div>
+                                {/* Component Image */}
+                                <img src={comp.image} alt={comp.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                             </Link>
 
                             <div className="p-5 flex flex-col flex-1 border-t border-white/5 bg-[#121215]/50">

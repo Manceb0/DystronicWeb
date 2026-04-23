@@ -67,7 +67,7 @@ export default function CommunityPage() {
                                 <span className="bg-[#121215]/80 text-white border border-white/10 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest">{post.condition}</span>
                             </div>
 
-                            <span className="font-mono text-sm text-gray-700">{post.image.replace("/mock/", "")}</span>
+                            <img src={post.image} alt={post.title} className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700 z-0" />
                         </div>
 
                         {/* Content Zone */}

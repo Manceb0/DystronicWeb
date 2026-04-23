@@ -13,37 +13,70 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full z-[-1] mix-blend-screen pointer-events-none"></div>
         <div className="absolute top-1/2 left-[20%] w-[400px] h-[400px] bg-purple-500/10 blur-[120px] rounded-full z-[-1] mix-blend-screen pointer-events-none"></div>
 
-        <div className="container mx-auto px-4 z-10 flex flex-col items-center text-center">
-          <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8">
-            <span className="w-2 h-2 rounded-full bg-blue-400 mr-3 animate-pulse shadow-[0_0_10px_rgba(96,165,250,0.8)]"></span>
-            <span className="text-sm font-medium text-blue-200 tracking-wide">Physical Store + Digital Lab</span>
+        <div className="container mx-auto px-4 z-10 grid lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Left Text Content */}
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
+            <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8">
+              <span className="w-2 h-2 rounded-full bg-blue-400 mr-3 animate-pulse shadow-[0_0_10px_rgba(96,165,250,0.8)]"></span>
+              <span className="text-sm font-medium text-blue-200 tracking-wide">Physical Store + Digital Lab</span>
+            </div>
+
+            <h1 className="text-5xl md:text-6xl xl:text-7xl font-bold tracking-tight mb-6 leading-tight font-sans">
+              Everything you need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">build, learn, and prototype</span> in one place.
+            </h1>
+
+            <p className="text-lg md:text-xl text-gray-400 max-w-2xl lg:max-w-xl mb-12 leading-relaxed">
+              Not just parts. A structured path to create. Dystronic gives you the components, guided kits, courses, and AI project planning to turn your idea into physical reality.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+              <Link href="/store" className="w-full sm:w-auto">
+                <Button variant="orange" size="lg" className="w-full sm:w-auto shadow-lg shadow-purple-500/20">
+                  Explore Components <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/ai-builder" className="w-full sm:w-auto">
+                <Button variant="cyan" size="lg" className="w-full sm:w-auto bg-blue-500/10 backdrop-blur-md">
+                  <Bot className="mr-2 h-4 w-4" /> Try Dystronic AI
+                </Button>
+              </Link>
+            </div>
+
+            <div className="mt-16 pt-8 border-t border-white/5 w-full max-w-md flex justify-between gap-4 text-xs sm:text-sm text-gray-500 tracking-wide">
+              <div className="flex flex-col items-center lg:items-start"><Activity size={18} className="mb-2 text-gray-400" /> Fast Local Restock</div>
+              <div className="flex flex-col items-center lg:items-start"><PackageOpen size={18} className="mb-2 text-gray-400" /> Ready to Build Kits</div>
+              <div className="flex flex-col items-center lg:items-start"><Wrench size={18} className="mb-2 text-gray-400" /> Lab Tested</div>
+            </div>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight max-w-4xl font-sans">
-            Everything you need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">build, learn, and prototype</span> in one place.
-          </h1>
+          {/* Right Visual Content */}
+          <div className="hidden lg:block relative h-[600px] w-full">
+            {/* Main Center Image */}
+            <div className="absolute top-1/2 left-1/2 w-[350px] h-[350px] rounded-2xl glass-panel p-2 z-20 animate-float-center shadow-2xl">
+              <img src="/mock/arduino.png" alt="Arduino Component" className="w-full h-full object-cover rounded-xl" />
+            </div>
+            
+            {/* Secondary Image 1 - Top Right */}
+            <div className="absolute top-[10%] right-[5%] w-[200px] h-[200px] rounded-2xl glass-panel p-2 z-10 animate-float-1 shadow-xl opacity-90">
+              <img src="/mock/pico.png" alt="Raspberry Pi Pico" className="w-full h-full object-cover rounded-xl" />
+            </div>
 
-          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mb-12 leading-relaxed">
-            Not just parts. A structured path to create. Dystronic gives you the components, guided kits, courses, and AI project planning to turn your idea into physical reality.
-          </p>
+            {/* Secondary Image 2 - Bottom Left */}
+            <div className="absolute bottom-[5%] left-[5%] w-[180px] h-[180px] rounded-2xl glass-panel p-2 z-30 animate-float-2 shadow-xl opacity-90">
+              <img src="/mock/hc-sr04.png" alt="Ultrasonic Sensor" className="w-full h-full object-cover rounded-xl" />
+            </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Link href="/store">
-              <Button variant="orange" size="lg" className="w-full sm:w-auto">
-                Explore Components <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/ai-builder">
-              <Button variant="cyan" size="lg" className="w-full sm:w-auto">
-                <Bot className="mr-2 h-4 w-4" /> Try Dystronic AI
-              </Button>
-            </Link>
-          </div>
-
-          <div className="mt-16 pt-8 border-t border-white/5 w-full max-w-3xl flex justify-center gap-12 text-sm text-gray-500 tracking-wide">
-            <div className="flex flex-col items-center"><Activity size={20} className="mb-2 text-gray-400" /> Fast Local Restock</div>
-            <div className="flex flex-col items-center"><PackageOpen size={20} className="mb-2 text-gray-400" /> Ready to Build Kits</div>
-            <div className="flex flex-col items-center"><Wrench size={20} className="mb-2 text-gray-400" /> Lab Tested</div>
+            {/* Floating Badge */}
+            <div className="absolute bottom-[25%] right-[10%] bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-2xl flex items-center gap-4 z-40 animate-float-3 shadow-2xl">
+              <div className="bg-teal-500/20 p-3 rounded-full text-teal-400 shadow-[0_0_15px_rgba(20,184,166,0.3)]">
+                <Cpu size={24} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-widest font-bold">In Stock</p>
+                <p className="text-lg font-bold text-white">5,000+ Parts</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
