@@ -1,14 +1,15 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { use } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Clock, Video, ListChecks, Target, PackageOpen, Bot } from "lucide-react";
 import { MOCK_COURSES, MOCK_KITS } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/context/AppContext";
 
-export default function CourseDetail() {
-    const { id } = useParams() as { id: string };
+export default function CourseDetail({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const router = useRouter();
     const { addToCart } = useAppContext();
 

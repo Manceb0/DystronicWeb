@@ -1,14 +1,14 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { use } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, GraduationCap, PackageCheck, Bot, Network } from "lucide-react";
 import { MOCK_KITS, MOCK_COMPONENTS, MOCK_COURSES } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/context/AppContext";
 
-export default function KitDetail() {
-    const { id } = useParams() as { id: string };
+export default function KitDetail({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const { addToCart } = useAppContext();
 
     const kit = MOCK_KITS.find(k => k.id === id);

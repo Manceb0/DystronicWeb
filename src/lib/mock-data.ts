@@ -182,14 +182,14 @@ export const MOCK_SCENARIOS: AIScenario[] = [
       description: "A complete autonomous and Bluetooth-controlled rover. Great for understanding control logic and motor mechanics."
     },
     nodes: [
-      { id: "n1", type: "POWER", label: "Main LiPo Battery", partId: "c16", x: 100, y: 100 },
-      { id: "n2", type: "MODULE", label: "5V Power Regulator", partId: "c18", x: 300, y: 150 },
-      { id: "n3", type: "MCU", label: "Main Controller (Arduino)", partId: "c1", x: 500, y: 300 },
-      { id: "n4", type: "SENSOR", label: "Front Ultrasonic Sensor", partId: "c5", x: 800, y: 200 },
-      { id: "n5", type: "MODULE", label: "Drive Motor Driver", partId: "c21", x: 800, y: 400 },
-      { id: "n6", type: "ACTUATOR", label: "Right Drive Motor", partId: "c13", x: 1100, y: 300 },
-      { id: "n7", type: "ACTUATOR", label: "Left Drive Motor", partId: "c13", x: 1100, y: 500 },
-      { id: "n8", type: "ACTUATOR", label: "Steering Servo", partId: "c11", x: 800, y: 600 }
+      { id: "n1", type: "POWER", label: "Main LiPo Battery", partId: "c16", x: 60, y: 80 },
+      { id: "n2", type: "MODULE", label: "5V Power Regulator", partId: "c18", x: 320, y: 120 },
+      { id: "n3", type: "MCU", label: "Main Controller (Arduino)", partId: "c1", x: 460, y: 280 },
+      { id: "n4", type: "SENSOR", label: "Front Ultrasonic Sensor", partId: "c5", x: 740, y: 60 },
+      { id: "n5", type: "MODULE", label: "Drive Motor Driver", partId: "c21", x: 740, y: 280 },
+      { id: "n6", type: "ACTUATOR", label: "Right Drive Motor", partId: "c13", x: 940, y: 160 },
+      { id: "n7", type: "ACTUATOR", label: "Left Drive Motor", partId: "c13", x: 940, y: 400 },
+      { id: "n8", type: "ACTUATOR", label: "Steering Servo", partId: "c11", x: 740, y: 520 }
     ],
     connections: [
       { source: "n1", target: "n2", type: "POWER" },

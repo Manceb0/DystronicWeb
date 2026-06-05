@@ -1,6 +1,7 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { use } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, ChevronRight, CircuitBoard, Bot, ShoppingCart } from "lucide-react";
@@ -8,8 +9,8 @@ import { MOCK_COMPONENTS, MOCK_SCENARIOS } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/context/AppContext";
 
-export default function ProductDetail() {
-    const { id } = useParams() as { id: string };
+export default function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const router = useRouter();
     const { addToCart, setActiveAIProject } = useAppContext();
 
