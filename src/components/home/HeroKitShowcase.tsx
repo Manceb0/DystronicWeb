@@ -6,6 +6,8 @@ import Link from "next/link";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ArrowUpRight, Package } from "lucide-react";
+import { useTranslation } from "@/i18n/LanguageProvider";
+import { translateLevel } from "@/i18n/helpers";
 
 const Particles = dynamic(() => import("@/components/Particles"), { ssr: false });
 
@@ -60,6 +62,7 @@ const FEATURED_KITS = [
 ] as const;
 
 export default function HeroKitShowcase() {
+  const { t, locale } = useTranslation();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [activeKit, setActiveKit] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -142,7 +145,7 @@ export default function HeroKitShowcase() {
         <div className="relative z-10 px-5 py-4 flex items-center justify-between border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: kit.accent }} />
-            <span className="font-mono text-[10px] text-white/55 tracking-[0.32em] uppercase">Featured Kits</span>
+            <span className="font-mono text-[10px] text-white/55 tracking-[0.32em] uppercase">{t("heroKit.spotlight")}</span>
           </div>
           <span className="font-mono text-[10px] text-white/30 tabular-nums tracking-wider">
             {String(activeKit + 1).padStart(2, "0")} / {String(FEATURED_KITS.length).padStart(2, "0")}
@@ -192,7 +195,7 @@ export default function HeroKitShowcase() {
             <div className="flex items-center gap-2">
               <Package size={11} className="text-white/40" />
               <span className="font-mono text-[10px] text-white/40 tracking-wider uppercase">
-                {kit.parts} componentes · {kit.level}
+                {kit.parts} {t("heroKit.parts")} · {translateLevel(locale, kit.level)}
               </span>
             </div>
 
@@ -215,7 +218,7 @@ export default function HeroKitShowcase() {
                 ${kit.price}
               </span>
               <span className="inline-flex items-center gap-2 font-mono text-[11px] font-bold tracking-wider uppercase text-white/70 group-hover:text-white transition-colors">
-                Ver kit
+                {t("heroKit.explore")}
                 <ArrowUpRight
                   size={13}
                   className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"

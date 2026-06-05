@@ -8,16 +8,19 @@ import { ArrowLeft, CheckCircle2, ChevronRight, CircuitBoard, Bot, ShoppingCart 
 import { MOCK_COMPONENTS, MOCK_SCENARIOS } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/context/AppContext";
+import { useTranslation } from "@/i18n/LanguageProvider";
+import { translateCategory } from "@/i18n/helpers";
 
 export default function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
     const { addToCart, setActiveAIProject } = useAppContext();
+    const { t, locale } = useTranslation();
 
     const product = MOCK_COMPONENTS.find(p => p.id === id);
 
     if (!product) {
-        return <div className="container mx-auto p-20 text-center font-mono">Component not found.</div>;
+        return <div className="container mx-auto p-20 text-center font-mono">{t("store.notFound")}</div>;
     }
 
     // Find a related scenario
@@ -36,9 +39,9 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
         <div className="container mx-auto px-4 py-8">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-xs font-mono tracking-widest text-gray-500 uppercase mb-8">
-                <Link href="/" className="hover:text-white transition-colors">Home</Link>
+                <Link href="/" className="hover:text-white transition-colors">{t("common.home")}</Link>
                 <ChevronRight size={12} />
-                <Link href="/store" className="hover:text-white transition-colors">Store</Link>
+                <Link href="/store" className="hover:text-white transition-colors">{t("store.breadcrumbStore")}</Link>
                 <ChevronRight size={12} />
                 <span className="text-[#00f0ff]">{product.name}</span>
             </div>
@@ -60,14 +63,14 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 {/* Product Info Zone */}
                 <div className="flex flex-col">
                     <div className="text-[10px] text-[#00f0ff] font-mono font-bold tracking-widest uppercase mb-2">
-                        [ CATEGORY: {product.category} ]
+                        [ {t("store.categoryLabel")}: {translateCategory(locale, product.category)} ]
                     </div>
                     <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">{product.name}</h1>
 
                     <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/10">
                         <div className="text-3xl font-mono text-[#00f0ff]">${product.price.toFixed(2)}</div>
                         <div className="flex items-center gap-2 text-sm text-[#39ff14] font-mono bg-[#39ff14]/10 px-3 py-1 rounded-sm">
-                            <CheckCircle2 size={16} /> In Stock ({product.stock})
+                            <CheckCircle2 size={16} /> {t("store.inStockCount").replace("{count}", String(product.stock))}
                         </div>
                     </div>
 
@@ -77,7 +80,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
 
                     <div className="flex items-center gap-4 mb-12">
                         <Button variant="solid" size="lg" className="flex-1" onClick={() => addToCart(product, "part")}>
-                            <ShoppingCart size={18} className="mr-2" /> Add to List
+                            <ShoppingCart size={18} className="mr-2" /> {t("store.addToList")}
                         </Button>
                         <Button variant="outline" size="lg" className="w-12 h-12 p-0 flex items-center justify-center">
                             <CircuitBoard size={18} />
@@ -94,13 +97,9 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                                 <Bot size={24} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold text-white mb-2 font-mono">Don't know if this works for your project?</h3>
-                                <p className="text-sm text-gray-400 font-mono mb-4">
-                                    Our automated Assistant can verify compatibility, give you a wiring diagram, or recommend alternatives.
-                                </p>
-                                <Button variant="green" size="sm" onClick={handleAskAI}>
-                                    Ask Dystronic AI
-                                </Button>
+                                <h3 className="text-lg font-bold text-white mb-2 font-mono">{t("store.askAiTitle")}</h3>
+                                <p className="text-sm text-gray-400 font-mono mb-4">{t("store.askAiDesc")}</p>
+                                <Button variant="green" size="sm" onClick={handleAskAI}>{t("store.askDystronicAi")}</Button>
                             </div>
                         </div>
                     </div>
@@ -109,7 +108,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 glass-panel p-8">
-                    <h3 className="text-xl font-bold font-mono uppercase tracking-widest text-white mb-6 border-b border-white/10 pb-4">Tech Specs</h3>
+                    <h3 className="text-xl font-bold font-mono uppercase tracking-widest text-white mb-6 border-b border-white/10 pb-4">{t("store.techSpecs")}</h3>
                     <ul className="space-y-4 font-mono text-sm">
                         {Object.entries(product.specs).map(([key, val]) => (
                             <li key={key} className="flex border-b border-dashed border-gray-800 pb-2">

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Roboto_Mono, Bebas_Neue } from "next/font/google";
 import "./globals.css";
-import { AppProvider } from "@/context/AppContext";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
+import { ClientProviders } from "@/components/providers/ClientProviders";
 
 const inter = Inter({
   variable: "--font-sans-family",
@@ -25,8 +25,8 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "Dystronic | Lab & Component Store",
-  description: "The ultimate platform to learn, build and buy electronic projects.",
+  title: "Dystronic | Laboratorio y Tienda de Componentes",
+  description: "La plataforma para aprender, construir y comprar proyectos electrónicos.",
 };
 
 export default function RootLayout({
@@ -35,9 +35,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${robotoMono.variable} ${bebasNeue.variable} h-full antialiased dark`}>
+    <html lang="es" className={`${inter.variable} ${robotoMono.variable} ${bebasNeue.variable} h-full antialiased dark`}>
       <body className="min-h-full flex flex-col bg-[#09090b] text-gray-100 selection:bg-purple-500/30 selection:text-purple-100 relative overflow-x-hidden">
-        <AppProvider>
+        <ClientProviders>
           {/* Modern glassmorphic background with blurred ambient orbs */}
           <div className="fixed inset-0 pointer-events-none z-[-1]">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-900/20 blur-[120px] mix-blend-screen"></div>
@@ -48,7 +48,7 @@ export default function RootLayout({
           <Navbar />
           <main className="flex-1 flex flex-col w-full relative z-0 mt-16">{children}</main>
           <Footer />
-        </AppProvider>
+        </ClientProviders>
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -14,6 +14,10 @@ import { Suspense } from "react";
 import { MOCK_SCENARIOS, MOCK_COMPONENTS, Part } from "@/lib/mock-data";
 import { useAppContext } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n/LanguageProvider";
+import { interpolate } from "@/i18n/helpers";
+import { localizePart, localizeScenario } from "@/i18n/content";
+import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import PartDetailSheet from "@/components/ai-builder/PartDetailSheet";
 import ChatWelcomeFlow from "@/components/ai-builder/ChatWelcomeFlow";
 
@@ -30,6 +34,7 @@ function AIBuilderContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { addToCart, activeAIProject } = useAppContext();
+    const { t, locale } = useTranslation();
 
     // State
     const [hasStartedBuilder, setHasStartedBuilder] = useState(false);
@@ -58,11 +63,27 @@ function AIBuilderContent() {
         moved: boolean;
     } | null>(null);
 
-    const scenario = MOCK_SCENARIOS.find(s => s.id === projectId) || MOCK_SCENARIOS[0];
-    // Use node.id as key source — partId can repeat (e.g. two DC Gear Motors)
-    const partNodes = scenario.nodes
-        .map(n => ({ node: n, part: MOCK_COMPONENTS.find(c => c.id === n.partId) }))
-        .filter(v => v.part) as { node: typeof scenario.nodes[0]; part: Part }[];
+    const baseScenario = MOCK_SCENARIOS.find(s => s.id === projectId) || MOCK_SCENARIOS[0];
+    const scenario = useMemo(
+        () => localizeScenario(baseScenario, locale),
+        [baseScenario, locale]
+    );
+
+    const getPart = useCallback(
+        (partId: string) => {
+            const raw = MOCK_COMPONENTS.find(c => c.id === partId);
+            return raw ? localizePart(raw, locale) : undefined;
+        },
+        [locale]
+    );
+
+    const partNodes = useMemo(
+        () =>
+            scenario.nodes
+                .map(n => ({ node: n, part: getPart(n.partId) }))
+                .filter((v): v is { node: typeof scenario.nodes[0]; part: Part } => !!v.part),
+        [scenario.nodes, getPart]
+    );
     const parts = partNodes.map(v => v.part);
 
     useEffect(() => {
@@ -77,19 +98,17 @@ function AIBuilderContent() {
     }, [searchParams, activeAIProject]);
 
     useEffect(() => {
-        setBoardNodes(scenario.nodes.map(n => ({ ...n })));
+        setBoardNodes(baseScenario.nodes.map(n => ({ ...n })));
         setChatByPart({});
         setSelectedPartId(null);
         setLeftPanelView("plan");
-    }, [scenario]);
+    }, [projectId, baseScenario]);
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [chatByPart, selectedPartId, leftPanelView]);
 
-    const selectedPart = selectedPartId
-        ? MOCK_COMPONENTS.find(c => c.id === selectedPartId)
-        : null;
+    const selectedPart = selectedPartId ? getPart(selectedPartId) ?? null : null;
     const activeChatMessages = selectedPartId ? (chatByPart[selectedPartId] ?? []) : [];
 
     const selectPartForChat = (partId: string) => {
@@ -108,10 +127,18 @@ function AIBuilderContent() {
         const q = question.toLowerCase();
         if (q.includes("pin") || q.includes("conect"))
             return `Soy ${part.name}. Revisa las especificaciones (${Object.keys(part.specs).slice(0, 2).join(", ")}) y conéctame según el esquema del board.`;
-        if (q.includes("volt") || q.includes("aliment"))
-            return part.specs["Operating Voltage"] || part.specs["Voltage"] || part.specs["Input"]
-                ? `Mi alimentación típica: ${part.specs["Operating Voltage"] || part.specs["Voltage"] || part.specs["Input"]}.`
+        if (q.includes("volt") || q.includes("aliment") || q.includes("power")) {
+            const v =
+                part.specs["Operating Voltage"] ||
+                part.specs["Voltaje de operación"] ||
+                part.specs["Voltage"] ||
+                part.specs["Voltaje"] ||
+                part.specs["Input"] ||
+                part.specs["Entrada"];
+            return v
+                ? `Mi alimentación típica: ${v}.`
                 : `Consulta la hoja de ${part.name} en la tienda Dystronic para el rango de tensión exacto.`;
+        }
         return `Como ${part.name}: ${part.description} ¿Quieres saber cómo cablearme con otro módulo del proyecto?`;
     };
 
@@ -126,7 +153,7 @@ function AIBuilderContent() {
 
         const partId = selectedPartId ?? parts[0]?.id;
         if (!partId) return;
-        const part = MOCK_COMPONENTS.find(c => c.id === partId);
+        const part = getPart(partId);
         if (!part) return;
 
         if (!selectedPartId) setSelectedPartId(partId);
@@ -354,10 +381,10 @@ function AIBuilderContent() {
                 {/* Center: icon tabs — matches reference design */}
                 <div className="flex items-center gap-0.5 bg-[#111114] border border-white/[0.07] p-0.5">
                     {([
-                        { mode: "overview",  icon: <ScanLine size={13} />,    label: "OVERVIEW" },
-                        { mode: "wiring",    icon: <Workflow size={13} />,     label: "WIRING"   },
-                        { mode: "learn",     icon: <BookOpen size={13} />,     label: "LEARN"    },
-                        { mode: "purchase",  icon: <ShoppingBag size={13} />,  label: "PURCHASE" },
+                        { mode: "overview",  icon: <ScanLine size={13} />,    label: t("aiBuilder.overview") },
+                        { mode: "wiring",    icon: <Workflow size={13} />,     label: t("aiBuilder.wiring") },
+                        { mode: "learn",     icon: <BookOpen size={13} />,     label: t("aiBuilder.learn") },
+                        { mode: "purchase",  icon: <ShoppingBag size={13} />,  label: t("aiBuilder.purchase") },
                     ] as { mode: ViewMode; icon: React.ReactNode; label: string }[]).map(({ mode, icon, label }) => {
                         const isActive = activeTab === mode;
                         return (
@@ -379,8 +406,8 @@ function AIBuilderContent() {
                 </div>
 
                 {/* Right: actions + publish */}
-                <div className="flex items-center gap-2 w-[220px] justify-end">
-                    {/* session timer */}
+                <div className="flex items-center gap-2 w-[260px] justify-end">
+                    <LanguageSwitcher />
                     <div className="flex items-center gap-1 text-[10px] text-gray-600 font-mono border border-white/[0.07] px-2 py-1 bg-[#111114]">
                         <Clock size={11} />
                         <span>18:00</span>
@@ -388,7 +415,7 @@ function AIBuilderContent() {
                     <button className="text-gray-600 hover:text-white transition-colors p-1" title="Export"><Download size={14} /></button>
                     <button className="text-gray-600 hover:text-white transition-colors p-1" title="Share"><Globe size={14} /></button>
                     <button className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-[#00f0ff] text-black px-3 py-1.5 hover:bg-[#00d4e0] transition-colors">
-                        <Share2 size={11} /> Publish
+                        <Share2 size={11} /> {t("common.publish")}
                     </button>
                 </div>
             </div>
@@ -410,7 +437,7 @@ function AIBuilderContent() {
                                 onClick={() => setLeftPanelView("plan")}
                                 className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 ${leftPanelView === "plan" ? "border-white text-white bg-white/5" : "border-transparent text-gray-500 hover:text-gray-300"}`}
                             >
-                                Plan
+                                {t("aiBuilder.plan")}
                             </button>
                             <button
                                 type="button"
@@ -422,7 +449,7 @@ function AIBuilderContent() {
                                 }}
                                 className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 flex items-center justify-center gap-1.5 ${leftPanelView === "chat" ? "border-[#00f0ff] text-[#00f0ff] bg-[#00f0ff]/5" : "border-transparent text-gray-500 hover:text-gray-300"}`}
                             >
-                                <MessageSquare size={11} /> Chat
+                                <MessageSquare size={11} /> {t("aiBuilder.chat")}
                             </button>
                         </div>
                     </div>
@@ -431,7 +458,7 @@ function AIBuilderContent() {
                         {isGenerating ? (
                             <div className="h-full min-h-[200px] flex flex-col items-center justify-center text-[#00f0ff]">
                                 <Bot size={48} className="animate-pulse mb-6 opacity-50 text-[#00f0ff]" />
-                                <p className="text-xs uppercase tracking-widest animate-pulse">GENERATING SYSTEM PLAN...</p>
+                                <p className="text-xs uppercase tracking-widest animate-pulse">{t("aiBuilder.generating")}</p>
                                 <div className="w-1/2 h-1 bg-white/5 mt-4 rounded-full overflow-hidden">
                                     <div className="h-full bg-[#00f0ff] animate-[progress_2s_ease-in-out_infinite]"></div>
                                 </div>
@@ -439,13 +466,13 @@ function AIBuilderContent() {
                         ) : leftPanelView === "plan" ? (
                             <div className="space-y-6">
                                 <div>
-                                    <div className="text-[10px] text-gray-500 mb-2 uppercase tracking-widest text-right">USER_INPUT</div>
+                                    <div className="text-[10px] text-gray-500 mb-2 uppercase tracking-widest text-right">{t("aiBuilder.userInput")}</div>
                                     <div className="border border-white/20 p-4 bg-[#121215]/50 text-gray-300">
                                         &quot;{scenario.prompt}&quot;
                                     </div>
                                 </div>
                                 <div>
-                                    <div className="text-[10px] text-[#00f0ff] mb-2 uppercase tracking-widest">SYSTEM_PLAN</div>
+                                    <div className="text-[10px] text-[#00f0ff] mb-2 uppercase tracking-widest">{t("aiBuilder.systemPlan")}</div>
                                     <div className="border border-white/10 bg-[#0a0a0d] p-4 text-gray-400 space-y-4">
                                         {scenario.systemPlan.length > 0 ? (
                                             scenario.systemPlan.map((step, idx) => (
@@ -455,14 +482,14 @@ function AIBuilderContent() {
                                                 </div>
                                             ))
                                         ) : (
-                                            <div className="text-gray-500 text-xs italic">[ No system plan data for this module in demo ]</div>
+                                            <div className="text-gray-500 text-xs italic">{t("aiBuilder.noPlan")}</div>
                                         )}
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             <div className="flex flex-col h-full min-h-0 gap-3">
-                                <p className="text-[10px] text-gray-500 uppercase tracking-widest">Componente activo</p>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest">{t("aiBuilder.activeComponent")}</p>
                                 {/* Chips — node.id as key fixes duplicate key bug */}
                                 <div className="flex flex-wrap gap-1.5">
                                     {partNodes.map(({ node, part }) => {
@@ -491,7 +518,7 @@ function AIBuilderContent() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-gray-500 italic">Selecciona un componente para chatear.</p>
+                                    <p className="text-xs text-gray-500 italic">{t("aiBuilder.selectComponent")}</p>
                                 )}
 
                                 {/* Chat messages — blueprint.am inspired */}
@@ -503,7 +530,7 @@ function AIBuilderContent() {
                                             </div>
                                             <div className="flex-1 bg-[#0d0d12] border border-white/8 p-3 text-[11px] leading-relaxed text-gray-400">
                                                 <span className="text-[#00f0ff]/70 text-[9px] font-bold uppercase tracking-wider block mb-1.5">{selectedPart.name}</span>
-                                                Pregúntame sobre pines, voltaje o cómo integrarme en este proyecto.
+                                                {t("aiBuilder.chatIntro")}
                                             </div>
                                         </div>
                                     )}
@@ -539,7 +566,7 @@ function AIBuilderContent() {
                                 onClick={() => setLeftPanelView("plan")}
                                 className={`flex-1 flex items-center justify-center gap-2 font-bold py-1.5 text-xs uppercase transition-all ${leftPanelView === "plan" ? "bg-[#ff5e00] text-black" : "border border-white/20 text-gray-400 hover:bg-white/5"}`}
                             >
-                                <Edit3 size={12} /> Plan
+                                <Edit3 size={12} /> {t("aiBuilder.plan")}
                             </button>
                             <button
                                 type="button"
@@ -551,14 +578,14 @@ function AIBuilderContent() {
                                 }}
                                 className={`flex-1 flex items-center justify-center gap-2 font-bold py-1.5 text-xs uppercase transition-all ${leftPanelView === "chat" ? "bg-[#00f0ff] text-black" : "border border-[#00f0ff]/50 text-[#00f0ff] hover:bg-[#00f0ff]/10"}`}
                             >
-                                <MessageSquare size={12} /> Ask
+                                <MessageSquare size={12} /> {t("aiBuilder.ask")}
                             </button>
                         </div>
                         <div className="relative flex gap-2">
                             <input
                                 ref={chatInputRef}
                                 type="text"
-                                placeholder={leftPanelView === "chat" ? "Pregunta al componente..." : "Pide cambios al proyecto..."}
+                                placeholder={leftPanelView === "chat" ? t("aiBuilder.chatPlaceholder") : t("aiBuilder.planPlaceholder")}
                                 value={inputValue}
                                 onChange={e => setInputValue(e.target.value)}
                                 onKeyDown={e => {
@@ -612,9 +639,9 @@ function AIBuilderContent() {
                             >
                                 <div className="absolute top-0 left-0 right-0 h-8 border-b border-[#00f0ff]/20 bg-[#0a0a0d]/80 flex items-center px-3 gap-2 z-20 pointer-events-none">
                                     <LayoutTemplate size={12} className="text-[#00f0ff]" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#00f0ff]">Prototype board</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#00f0ff]">{t("aiBuilder.prototypeBoard")}</span>
                                     <span className="text-[10px] text-gray-500 ml-auto">
-                                        {leftPanelView === "chat" ? "Clic en un módulo para chatear · arrastra para mover" : "Arrastra los componentes dentro del board"}
+                                        {leftPanelView === "chat" ? t("aiBuilder.clickChatHint") : t("aiBuilder.dragHint")}
                                     </span>
                                 </div>
                                 {/* Connections SVG Layer */}
@@ -679,7 +706,9 @@ function AIBuilderContent() {
 
                                 {/* Nodes */}
                                 {boardNodes.map(node => {
-                                    const part = MOCK_COMPONENTS.find(c => c.id === node.partId);
+                                    const nodeMeta = scenario.nodes.find(n => n.id === node.id);
+                                    const nodeLabel = nodeMeta?.label ?? node.label;
+                                    const part = getPart(node.partId);
                                     const isHovered = hoveredNodeId === node.id;
                                     const isInspected = inspectedPartId === part?.id;
                                     const isDragging = draggingNodeId === node.id;
@@ -730,7 +759,7 @@ function AIBuilderContent() {
                                                 >
                                                     {node.type}
                                                 </span>
-                                                <span className="text-[8px] text-gray-500 truncate leading-tight">{node.label}</span>
+                                                <span className="text-[8px] text-gray-500 truncate leading-tight">{nodeLabel}</span>
                                             </div>
 
                                             {/* Body: image + name */}
@@ -746,7 +775,7 @@ function AIBuilderContent() {
                                                     )}
                                                 </div>
                                                 <div className="flex-1 min-w-0 pt-0.5">
-                                                    <p className="text-[10px] font-bold text-white leading-tight truncate">{part?.name ?? node.label}</p>
+                                                    <p className="text-[10px] font-bold text-white leading-tight truncate">{part?.name ?? nodeLabel}</p>
                                                     <p className="text-[8px] text-gray-500 mt-0.5 line-clamp-2 leading-tight">{part?.description ?? ""}</p>
                                                 </div>
                                             </div>
@@ -776,9 +805,9 @@ function AIBuilderContent() {
 
                                 {/* Full legend */}
                                 <div className="absolute bottom-4 left-4 w-52 border border-[#1e1e24] bg-[#09090b]/95 backdrop-blur-md p-3 z-20 pointer-events-none">
-                                    <h4 className="text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-2.5">SCHEMATIC</h4>
+                                    <h4 className="text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-2.5">{t("aiBuilder.schematic")}</h4>
 
-                                    <p className="text-[8px] text-gray-600 uppercase tracking-widest mb-1.5 font-bold">Node types</p>
+                                    <p className="text-[8px] text-gray-600 uppercase tracking-widest mb-1.5 font-bold">{t("aiBuilder.nodeTypes")}</p>
                                     <ul className="space-y-1 mb-3">
                                         {([
                                             ["MCU",      "#00f0ff"],
@@ -795,19 +824,19 @@ function AIBuilderContent() {
                                         ))}
                                     </ul>
 
-                                    <p className="text-[8px] text-gray-600 uppercase tracking-widest mb-1.5 font-bold border-t border-white/5 pt-2">Connections</p>
+                                    <p className="text-[8px] text-gray-600 uppercase tracking-widest mb-1.5 font-bold border-t border-white/5 pt-2">{t("aiBuilder.connections")}</p>
                                     <ul className="space-y-1.5">
                                         <li className="flex items-center gap-2 text-[9px]">
                                             <svg width="24" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#39ff14" strokeWidth="1.5" markerEnd="url(#arrow-data)" /></svg>
-                                            <span className="text-[#39ff14]">DATA</span>
+                                            <span className="text-[#39ff14]">{t("aiBuilder.data")}</span>
                                         </li>
                                         <li className="flex items-center gap-2 text-[9px]">
                                             <svg width="24" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#f97316" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrow-power)" /></svg>
-                                            <span className="text-[#f97316]">POWER</span>
+                                            <span className="text-[#f97316]">{t("aiBuilder.power")}</span>
                                         </li>
                                         <li className="flex items-center gap-2 text-[9px]">
                                             <svg width="24" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arrow-ground)" /></svg>
-                                            <span className="text-slate-400">GROUND</span>
+                                            <span className="text-slate-400">{t("aiBuilder.ground")}</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -820,22 +849,22 @@ function AIBuilderContent() {
                     {activeTab === "overview" && !isGenerating && (
                         <div className="w-full h-full p-12 overflow-y-auto relative z-10">
                             <div className="max-w-3xl">
-                                <h2 className="text-3xl font-bold font-sans text-white mb-6 uppercase tracking-widest">Project: {scenario.projectName}</h2>
+                                <h2 className="text-3xl font-bold font-sans text-white mb-6 uppercase tracking-widest">{scenario.projectName}</h2>
                                 <div className="grid grid-cols-3 gap-6 mb-12">
                                     <div className="bg-[#121215] border border-white/5 p-6 rounded-sm">
-                                        <p className="text-[#00f0ff] uppercase text-[10px] font-bold tracking-widest mb-1">Difficulty</p>
+                                        <p className="text-[#00f0ff] uppercase text-[10px] font-bold tracking-widest mb-1">{t("aiBuilder.difficulty")}</p>
                                         <p className="text-xl font-bold text-white">{scenario.overview.level}</p>
                                     </div>
                                     <div className="bg-[#121215] border border-white/5 p-6 rounded-sm">
-                                        <p className="text-[#ff5e00] uppercase text-[10px] font-bold tracking-widest mb-1">Est. Time</p>
+                                        <p className="text-[#ff5e00] uppercase text-[10px] font-bold tracking-widest mb-1">{t("aiBuilder.estTime")}</p>
                                         <p className="text-xl font-bold text-white">{scenario.overview.time}</p>
                                     </div>
                                     <div className="bg-[#121215] border border-white/5 p-6 rounded-sm">
-                                        <p className="text-[#39ff14] uppercase text-[10px] font-bold tracking-widest mb-1">Est. Cost</p>
+                                        <p className="text-[#39ff14] uppercase text-[10px] font-bold tracking-widest mb-1">{t("aiBuilder.estCost")}</p>
                                         <p className="text-xl font-bold text-white">${scenario.overview.cost.toFixed(2)}</p>
                                     </div>
                                 </div>
-                                <h3 className="text-lg font-bold text-[#00f0ff] uppercase tracking-widest mb-4">Objective</h3>
+                                <h3 className="text-lg font-bold text-[#00f0ff] uppercase tracking-widest mb-4">{t("aiBuilder.objective")}</h3>
                                 <p className="text-gray-400 text-lg leading-relaxed mb-8">{scenario.overview.description}</p>
                             </div>
                         </div>
@@ -844,8 +873,8 @@ function AIBuilderContent() {
                     {activeTab === "learn" && !isGenerating && (
                         <div className="w-full h-full p-12 overflow-y-auto relative z-10">
                             <div className="max-w-3xl">
-                                <h2 className="text-3xl font-bold font-sans text-white mb-6 uppercase tracking-widest">Learning Path</h2>
-                                <p className="text-gray-400 mb-8">Follow these generated steps to assemble your {scenario.projectName}.</p>
+                                <h2 className="text-3xl font-bold font-sans text-white mb-6 uppercase tracking-widest">{t("aiBuilder.learningPath")}</h2>
+                                <p className="text-gray-400 mb-8">{interpolate(t("aiBuilder.learningPathDesc"), { project: scenario.projectName })}</p>
 
                                 <div className="space-y-6">
                                     {scenario.learningSteps.map((step, idx) => (
@@ -855,7 +884,7 @@ function AIBuilderContent() {
                                             <p className="text-gray-400 text-base">{step.desc}</p>
                                         </div>
                                     ))}
-                                    {scenario.learningSteps.length === 0 && <p className="text-gray-500 italic">No learning steps defined for this demo model.</p>}
+                                    {scenario.learningSteps.length === 0 && <p className="text-gray-500 italic">{t("aiBuilder.noLearningSteps")}</p>}
                                 </div>
                             </div>
                         </div>
@@ -865,8 +894,8 @@ function AIBuilderContent() {
                         <div className="w-full h-full p-12 overflow-y-auto relative z-10 flex flex-col justify-center items-center">
                             <div className="max-w-md w-full bg-[#121215] border border-white/10 p-8 text-center rounded-sm">
                                 <Zap size={48} className="text-[#ff5e00] mx-auto mb-6" />
-                                <h2 className="text-2xl font-bold text-white mb-4 uppercase tracking-widest">Project Bundle</h2>
-                                <p className="text-gray-400 font-mono mb-8">Get all {scenario.nodes.length} necessary components for this project in one click. Verified by Dystronic AI.</p>
+                                <h2 className="text-2xl font-bold text-white mb-4 uppercase tracking-widest">{t("aiBuilder.projectBundle")}</h2>
+                                <p className="text-gray-400 font-mono mb-8">{interpolate(t("aiBuilder.bundleDesc"), { count: scenario.nodes.length })}</p>
 
                                 <div className="text-4xl font-bold font-mono text-[#39ff14] mb-8">
                                     ${scenario.overview.cost.toFixed(2)}
@@ -882,11 +911,11 @@ function AIBuilderContent() {
                                         router.push("/cart");
                                     }}
                                 >
-                                    Add Complete Bundle to Cart
+                                    {t("common.addCompleteBundle")}
                                 </Button>
 
                                 <Button variant="outline" size="lg" className="w-full" onClick={() => router.push("/request")}>
-                                    Request Sourcing (Out of stock parts)
+                                    {t("aiBuilder.requestSourcing")}
                                 </Button>
                             </div>
                         </div>
@@ -898,7 +927,7 @@ function AIBuilderContent() {
                 <div className={`${inspectedPartId ? "w-[420px]" : "w-[300px]"} shrink-0 border-l border-[#1a1a20] bg-[#050507] flex flex-col relative z-20 min-h-0 transition-all duration-200`}>
 
                     {inspectedPartId ? (() => {
-                        const ip = MOCK_COMPONENTS.find(c => c.id === inspectedPartId)!;
+                        const ip = getPart(inspectedPartId)!;
                         const ipNode = partNodes.find(v => v.part.id === inspectedPartId)?.node;
                         // Build connections list for this part from scenario
                         const partConnections: { label: string; type: "POWER" | "DATA" | "GROUND" }[] = [];
@@ -907,7 +936,7 @@ function AIBuilderContent() {
                             const dstNode = scenario.nodes.find(n => n.id === conn.target);
                             if (srcNode && dstNode && (srcNode.partId === ip.id || dstNode.partId === ip.id)) {
                                 const otherNode = srcNode.partId === ip.id ? dstNode : srcNode;
-                                const otherPart = MOCK_COMPONENTS.find(c => c.id === otherNode.partId);
+                                const otherPart = getPart(otherNode.partId);
                                 partConnections.push({
                                     label: `${otherNode.label}${otherPart ? ` (${otherPart.name})` : ""}`,
                                     type: conn.type as "POWER" | "DATA",
@@ -926,7 +955,7 @@ function AIBuilderContent() {
                     })() : (
                         <>
                             <div className="p-4 border-b border-[#1a1a20] flex items-center justify-between text-xs text-gray-500 font-bold uppercase tracking-widest shrink-0">
-                                <span className="flex items-center gap-2"><List size={14} /> PARTS LIST</span>
+                                <span className="flex items-center gap-2"><List size={14} /> {t("aiBuilder.partsList")}</span>
                                 <span>({parts.length})</span>
                             </div>
                             <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar space-y-1.5">
@@ -959,9 +988,9 @@ function AIBuilderContent() {
                             </div>
                             <div className="shrink-0 p-4 border-t border-[#1a1a20] bg-[#0a0a0d]">
                                 <Button variant="cyan" className="w-full mb-3 text-[10px] tracking-widest" onClick={() => setActiveTab("purchase")} disabled={isGenerating}>
-                                    VIEW PURCHASE OPTIONS
+                                    {t("common.viewPurchaseOptions")}
                                 </Button>
-                                <span className="text-[10px] text-gray-500 text-center flex items-center justify-center gap-1"><CornerDownRight size={10} /> Haz clic en un componente del board</span>
+                                <span className="text-[10px] text-gray-500 text-center flex items-center justify-center gap-1"><CornerDownRight size={10} /> {t("aiBuilder.clickBoardHint")}</span>
                             </div>
                         </>
                     )}
@@ -975,7 +1004,7 @@ function AIBuilderContent() {
 
 export default function AIBuilder() {
     return (
-        <Suspense fallback={<div className="h-screen w-full bg-[#050507] text-[#00f0ff] flex items-center justify-center font-mono tracking-widest animate-pulse">INITIALIZING LAB...</div>}>
+        <Suspense fallback={<div className="h-screen w-full bg-[#050507] text-[#00f0ff] flex items-center justify-center font-mono tracking-widest animate-pulse">INICIANDO LAB...</div>}>
             <AIBuilderContent />
         </Suspense>
     );

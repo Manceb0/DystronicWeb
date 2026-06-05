@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
+import { useTranslation } from "@/i18n/LanguageProvider";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import gsap from "gsap";
@@ -23,31 +24,29 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const DISPLAY = { fontFamily: "var(--font-display)" } as const;
 
-const HEADLINE_LINES = [
-  { text: "Build.",     outline: false },
-  { text: "Learn.",     outline: true  },
-  { text: "Prototype.", outline: false },
-];
-
-const modules = [
-  { tag: "CATALOG",   label: "Sensors & Parts",  desc: "Microcontrollers, sensors, actuators, and mechanical parts.", href: "/store",     accent: "#38bdf8", img: "/mock/esp32.jpg",         imgAlt: "ESP32 DevKit"  },
-  { tag: "KITS",      label: "Guided Kits",       desc: "Complete kits designed for a specific learning outcome.",      href: "/kits",      accent: "#a855f7", img: "/mock/kit-arduino.png",   imgAlt: "Starter Kit"   },
-  { tag: "COURSES",   label: "Learning Paths",    desc: "Basic electronics to advanced IoT and Robotics.",              href: "/courses",   accent: "#f59e0b", img: "/mock/course-arduino.jpg", imgAlt: "Arduino course"},
-  { tag: "COMMUNITY", label: "Resell & Donate",   desc: "Post unused components. Buy parts from other builders.",      href: "/community", accent: "#34d399", img: "/mock/jumpers-used.jpg",  imgAlt: "Used parts"    },
-] as const;
-
-const TERM_LINES = [
-  { color: "text-[#38bdf8]", text: '> build me a line-following robot' },
-  { color: "text-white/30",  text: 'Analyzing project requirements...'  },
-  { color: "text-[#34d399]", text: '✓ System Plan generated'           },
-  { color: "text-white/40",  text: '  Arduino UNO · L298N · IR x3'     },
-  { color: "text-[#34d399]", text: '✓ Parts list ready — 7 items'      },
-  { color: "text-[#34d399]", text: '✓ Wiring diagram generated'        },
-  { color: "text-white/25",  text: '  All items in Dystronic catalog'   },
-];
-
 export default function Home() {
+  const { t } = useTranslation();
   const pageRef = useRef<HTMLDivElement>(null);
+
+  const headlineLines = useMemo(() => [
+    { text: t("home.headline1"), outline: false },
+    { text: t("home.headline2"), outline: true },
+    { text: t("home.headline3"), outline: false },
+  ], [t]);
+
+  const modules = useMemo(() => [
+    { tag: t("home.modules.catalog.tag"), label: t("home.modules.catalog.label"), desc: t("home.modules.catalog.desc"), href: "/store", accent: "#38bdf8", img: "/mock/esp32.jpg", imgAlt: "ESP32 DevKit" },
+    { tag: t("home.modules.kits.tag"), label: t("home.modules.kits.label"), desc: t("home.modules.kits.desc"), href: "/kits", accent: "#a855f7", img: "/mock/kit-arduino.png", imgAlt: "Starter Kit" },
+    { tag: t("home.modules.courses.tag"), label: t("home.modules.courses.label"), desc: t("home.modules.courses.desc"), href: "/courses", accent: "#f59e0b", img: "/mock/course-arduino.jpg", imgAlt: "Arduino course" },
+    { tag: t("home.modules.community.tag"), label: t("home.modules.community.label"), desc: t("home.modules.community.desc"), href: "/community", accent: "#34d399", img: "/mock/jumpers-used.jpg", imgAlt: "Used parts" },
+  ], [t]);
+
+  const typewriterTexts = useMemo(() => [
+    t("home.typewriter.0"),
+    t("home.typewriter.1"),
+    t("home.typewriter.2"),
+    t("home.typewriter.3"),
+  ], [t]);
 
   useGSAP(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -152,7 +151,7 @@ export default function Home() {
           <div className="flex items-center gap-3 mb-10">
             <div className="w-7 h-px bg-[#38bdf8] shrink-0" />
             <ShinyText
-              text="Dystronic / Builder's Platform"
+              text={t("home.eyebrow")}
               speed={3}
               color="#38bdf8"
               shineColor="#a5f3fc"
@@ -167,7 +166,7 @@ export default function Home() {
             style={{ ...DISPLAY, textWrap: "balance" } as React.CSSProperties}
             className="text-[clamp(52px,6.2vw,92px)] leading-[0.9] uppercase mb-9"
           >
-            {HEADLINE_LINES.map((line, i) => (
+            {headlineLines.map((line, i) => (
               <span key={i} className="block overflow-hidden">
                 <span
                   className="hw block"
@@ -184,7 +183,7 @@ export default function Home() {
             {/* Description — BlurText word-by-word */}
             <div className="mb-7">
               <BlurText
-                text="Components, guided kits, courses, and AI project planning. One ecosystem, from idea to physical reality."
+                text={t("home.description")}
                 delay={60}
                 animateBy="words"
                 direction="bottom"
@@ -196,7 +195,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-3 mb-8">
               <Link href="/store">
                 <button className="group inline-flex items-center gap-2.5 px-5 py-2.5 bg-[#f43f5e] text-white font-mono text-[13px] font-bold tracking-wider uppercase transition-all duration-200 hover:bg-[#e11d48]">
-                  Explore Parts
+                  {t("home.exploreParts")}
                   <ArrowRight size={12} className="transition-transform duration-200 group-hover:translate-x-0.5" />
                 </button>
               </Link>
@@ -205,7 +204,7 @@ export default function Home() {
                   <button className="group relative inline-flex items-center gap-3 px-5 py-2.5 border border-[#38bdf8]/35 text-[#38bdf8]/75 overflow-hidden transition-all duration-300 hover:border-[#38bdf8] hover:text-[#38bdf8] hover:shadow-[0_0_22px_rgba(56,189,248,0.14)]">
                     <span aria-hidden className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-[#38bdf8]/10 to-transparent pointer-events-none" />
                     <Bot size={12} className="relative" />
-                    <span className="relative font-mono text-[13px] font-bold tracking-wider uppercase">Try AI Builder</span>
+                    <span className="relative font-mono text-[13px] font-bold tracking-wider uppercase">{t("home.tryAiBuilder")}</span>
                     <span className="relative flex h-[6px] w-[6px] shrink-0">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#38bdf8] opacity-50" />
                       <span className="relative inline-flex h-[6px] w-[6px] rounded-full bg-[#38bdf8]" />
@@ -222,7 +221,7 @@ export default function Home() {
                   <CountUp to={5000} from={0} duration={2} separator="," className="text-white" />
                   <span className="text-white">+</span>
                 </p>
-                <p className="font-mono text-[9px] text-white/28 tracking-[0.25em] uppercase mt-0.5">Parts stocked</p>
+                <p className="font-mono text-[9px] text-white/28 tracking-[0.25em] uppercase mt-0.5">{t("home.partsStocked")}</p>
               </div>
               <div className="w-px h-8 bg-white/[0.07]" />
               <div>
@@ -230,12 +229,12 @@ export default function Home() {
                   <CountUp to={48} from={0} duration={1.5} className="text-white" />
                   <span className="text-white/60 text-sm font-normal">h</span>
                 </p>
-                <p className="font-mono text-[9px] text-white/28 tracking-[0.25em] uppercase mt-0.5">Avg. restock</p>
+                <p className="font-mono text-[9px] text-white/28 tracking-[0.25em] uppercase mt-0.5">{t("home.avgRestock")}</p>
               </div>
               <div className="w-px h-8 bg-white/[0.07]" />
               <div>
                 <p className="font-mono text-xl font-bold">Lab</p>
-                <p className="font-mono text-[9px] text-white/28 tracking-[0.25em] uppercase mt-0.5">Tested & verified</p>
+                <p className="font-mono text-[9px] text-white/28 tracking-[0.25em] uppercase mt-0.5">{t("home.testedVerified")}</p>
               </div>
             </div>
           </div>
@@ -245,7 +244,7 @@ export default function Home() {
 
         {/* Scroll cue */}
         <div className="scroll-cue absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20 lg:left-[27%]">
-          <span className="font-mono text-[8px] text-white/20 tracking-[0.3em] uppercase">Scroll</span>
+          <span className="font-mono text-[8px] text-white/20 tracking-[0.3em] uppercase">{t("common.scroll")}</span>
           <ChevronDown size={14} className="text-white/20" />
         </div>
       </section>
@@ -273,7 +272,7 @@ export default function Home() {
           {/* LEFT */}
           <div>
             <h2 style={DISPLAY as React.CSSProperties} className="text-[clamp(48px,6.8vw,92px)] leading-[0.88] uppercase mb-6">
-              {["Dystronic", "AI Lab", "Builder"].map((word, i) => (
+              {[t("home.aiLabTitle1"), t("home.aiLabTitle2"), t("home.aiLabTitle3")].map((word, i) => (
                 <span key={i} className="block overflow-hidden">
                   <span className={`ai-word block ${i === 1 ? "text-teal-400" : ""}`}>{word}</span>
                 </span>
@@ -281,7 +280,7 @@ export default function Home() {
             </h2>
 
             <p className="text-white/40 max-w-[42ch] leading-relaxed text-[15px] mb-8">
-              Tell us what you want to build. The AI drafts a system plan, generates a visual wiring diagram, and produces a complete parts list sourced from our catalog.
+              {t("home.aiLabDesc")}
             </p>
 
             <MagneticButton distance={0.5}>
@@ -292,7 +291,7 @@ export default function Home() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-60" />
                     <span className="relative inline-flex rounded-full h-[7px] w-[7px] bg-teal-400" />
                   </span>
-                  <span className="relative font-mono text-[13px] font-bold tracking-wider uppercase">Open Lab</span>
+                  <span className="relative font-mono text-[13px] font-bold tracking-wider uppercase">{t("home.openLab")}</span>
                   <ArrowUpRight size={13} className="relative transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </button>
               </Link>
@@ -307,12 +306,7 @@ export default function Home() {
               <Bot size={15} className="text-teal-400 shrink-0" />
               <span className="text-white/55 text-[14px] font-light flex-1 min-w-0">
                 <Typewriter
-                  text={[
-                    "Build me a line-following robot",
-                    "Design a home weather station",
-                    "Create an IoT plant monitor",
-                    "Build a smart door lock system",
-                  ]}
+                  text={typewriterTexts}
                   speed={50}
                   deleteSpeed={22}
                   delay={2000}
@@ -334,7 +328,7 @@ export default function Home() {
               {/* Status bar */}
               <div className="px-5 py-3 border-b border-white/[0.05] flex items-center gap-3">
                 <CheckCircle2 size={12} className="text-teal-400 shrink-0" />
-                <span className="font-mono text-[11px] text-teal-400/80 tracking-wide">System plan ready</span>
+                <span className="font-mono text-[11px] text-teal-400/80 tracking-wide">{t("home.systemPlanReady")}</span>
                 <span className="ml-auto font-mono text-[10px] text-white/25">7 items · ~$45</span>
               </div>
 
@@ -372,10 +366,10 @@ export default function Home() {
                       <span key={i} className={`w-2.5 h-px ${c} opacity-60`} />
                     ))}
                   </div>
-                  <span className="font-mono text-[10px] text-white/30">Wiring diagram generated</span>
-                  <span className="ml-auto font-mono text-[9px] text-teal-400/50 uppercase tracking-wider">Preview</span>
+                  <span className="font-mono text-[10px] text-white/30">{t("home.wiringGenerated")}</span>
+                  <span className="ml-auto font-mono text-[9px] text-teal-400/50 uppercase tracking-wider">{t("common.preview")}</span>
                 </div>
-                <p className="font-mono text-[9px] text-white/20 text-center">All 7 items stocked at Dystronic</p>
+                <p className="font-mono text-[9px] text-white/20 text-center">{t("home.allStocked")}</p>
               </div>
             </div>
           </div>
@@ -418,26 +412,26 @@ export default function Home() {
             style={{ ...DISPLAY, textWrap: "balance" } as React.CSSProperties}
             className="text-[clamp(40px,7vw,94px)] leading-[0.9] uppercase max-w-4xl mb-8"
           >
-            We blur the lines between{" "}
+            {t("home.closingTitle1")}{" "}
             <span style={{ WebkitTextStroke: "1.5px rgba(255,255,255,0.25)", color: "transparent" }}>
-              sourcing
+              {t("home.closingTitle2")}
             </span>{" "}
-            and{" "}
-            <span className="text-[#38bdf8]">building.</span>
+            {t("home.closingTitle3")}{" "}
+            <span className="text-[#38bdf8]">{t("home.closingTitle4")}</span>
           </h2>
           <p className="text-white/35 max-w-[44ch] leading-relaxed text-[15px] font-light mb-10">
-            Dystronic serves both the expert who knows exactly what they need, and the beginner just starting out. One ecosystem, from idea to physical reality.
+            {t("home.closingDesc")}
           </p>
           <div className="flex flex-wrap gap-3">
             <Link href="/request">
               <button className="group inline-flex items-center gap-2.5 px-5 py-2.5 border border-white/15 text-white/45 font-mono text-[13px] tracking-wider uppercase transition-all duration-200 hover:border-white/40 hover:text-white">
-                Request a Part
+                {t("common.requestPart")}
                 <ArrowRight size={12} className="transition-transform duration-200 group-hover:translate-x-0.5" />
               </button>
             </Link>
             <Link href="/store">
               <button className="group inline-flex items-center gap-2.5 px-5 py-2.5 bg-white text-black font-mono text-[13px] font-bold tracking-wider uppercase transition-colors duration-200 hover:bg-[#38bdf8]">
-                Browse Catalog
+                {t("common.browseCatalog")}
                 <ArrowRight size={12} className="transition-transform duration-200 group-hover:translate-x-0.5" />
               </button>
             </Link>

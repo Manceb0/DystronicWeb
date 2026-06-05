@@ -4,21 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CircuitBoard, Search, ShoppingCart, User } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
+import { useTranslation } from "@/i18n/LanguageProvider";
+import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 
 export default function Navbar() {
     const pathname = usePathname();
     const { cart } = useAppContext();
+    const { t } = useTranslation();
 
     const totalItems = cart.reduce((acc, curr) => acc + curr.quantity, 0);
 
     const navLinks = [
-        { name: "Store", path: "/store" },
-        { name: "Kits", path: "/kits" },
-        { name: "Courses", path: "/courses" },
-        { name: "Community", path: "/community" },
+        { name: t("common.store"), path: "/store" },
+        { name: t("common.kits"), path: "/kits" },
+        { name: t("common.courses"), path: "/courses" },
+        { name: t("common.community"), path: "/community" },
     ];
 
-    // We hide standard navbar on the AI Builder page to give it the full screen width/height, handling navigation inside it
     if (pathname === "/ai-builder") {
         return null;
     }
@@ -37,7 +39,7 @@ export default function Navbar() {
                     <nav className="hidden md:flex items-center gap-6">
                         {navLinks.map((link) => (
                             <Link
-                                key={link.name}
+                                key={link.path}
                                 href={link.path}
                                 className={`text-sm tracking-wide font-medium transition-colors hover:text-[#00f0ff] ${pathname.startsWith(link.path) ? "text-[#00f0ff]" : "text-gray-400"
                                     }`}
@@ -48,18 +50,20 @@ export default function Navbar() {
                     </nav>
                 </div>
 
-                <div className="flex items-center gap-5">
+                <div className="flex items-center gap-3">
                     <div className="hidden md:flex items-center bg-[#121215] border border-white/10 rounded-sm px-3 py-1.5 focus-within:border-[#00f0ff]/50 transition-colors">
                         <Search size={16} className="text-gray-500 mr-2" />
                         <input
                             type="text"
-                            placeholder="Search components..."
-                            className="bg-transparent text-sm w-48 focus:outline-none placeholder:text-gray-600 font-mono"
+                            placeholder={t("common.search")}
+                            className="bg-transparent text-sm w-40 lg:w-48 focus:outline-none placeholder:text-gray-600 font-mono"
                         />
                     </div>
 
+                    <LanguageSwitcher />
+
                     <Link href="/ai-builder" className="text-sm font-bold font-mono px-3 py-1.5 border border-[#39ff14]/30 text-[#39ff14] bg-[#39ff14]/5 rounded-sm hover:bg-[#39ff14]/10 transition-colors">
-                        AI BUILDER
+                        {t("common.aiBuilder").toUpperCase()}
                     </Link>
 
                     <Link href="/cart" className="relative text-gray-300 hover:text-white transition-colors">
@@ -71,7 +75,7 @@ export default function Navbar() {
                         )}
                     </Link>
 
-                    <Link href="/profile" className="text-gray-300 hover:text-white transition-colors">
+                    <Link href="/profile" className="text-gray-300 hover:text-white transition-colors" title={t("common.profile")}>
                         <User size={20} />
                     </Link>
                 </div>
