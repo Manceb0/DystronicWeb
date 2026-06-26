@@ -13,6 +13,8 @@ import { MOCK_SCENARIOS, MOCK_KITS, MOCK_COURSES, MOCK_COMPONENTS, Part } from "
 
 gsap.registerPlugin(useGSAP);
 
+const DEMO_RC_PROMPT = "Quiero hacer un carro RC con sensores";
+
 type FlowMsg =
     | { id: string; role: "user"; content: string }
     | { id: string; role: "assistant"; type: "text"; content: string; done?: boolean }
@@ -41,26 +43,8 @@ const SUGGESTIONS: { label: string; prompt: string; icon: React.ReactNode; accen
 
 // ─── Detect what the user wants ─────────────────────────────
 function detectIntent(prompt: string): Intent {
-    const p = prompt.toLowerCase();
-    if (/\b(curso|course|learn|train|aprender|capacitaci|class|tutorial)\b/.test(p)) {
-        return { kind: "course", courseIds: ["crs1", "crs2", "crs3"] };
-    }
-    if (/\bkit\b|starter|empezar|empieza|principiante|beginner|begin/.test(p)) {
-        return { kind: "kit", kitIds: ["k1", "k2", "k3"] };
-    }
-    // Project keywords
-    if (/rc|carro|coche|car\b|robot|rover|wheel/.test(p)) return { kind: "project", scenarioId: "sc-rc-car" };
-    if (/brazo|arm\b|robotic arm/.test(p))                return { kind: "project", scenarioId: "sc-arm" };
-    if (/clima|weather|temperatur|estaci|station/.test(p)) return { kind: "project", scenarioId: "sc-weather" };
-    if (/riego|water|plant|invernadero|greenhouse/.test(p)) return { kind: "project", scenarioId: "sc-water" };
-    if (/alarm|seguridad|sensor de mov/.test(p))          return { kind: "project", scenarioId: "sc-alarm" };
-    if (/linea|line follower|seguidor/.test(p))           return { kind: "project", scenarioId: "sc-line" };
-    if (/construir|build|proyect|circuit|hacer un/.test(p)) return { kind: "project", scenarioId: "sc-rc-car" };
-    // Parts
-    if (/sensor|controller|motor|driver|fuente|battery|component|comprar|need a|necesito un/.test(p)) {
-        return { kind: "parts", partIds: ["c1", "c5", "c2"] };
-    }
-    return { kind: "general" };
+    void prompt;
+    return { kind: "project", scenarioId: "sc-rc-car" };
 }
 
 // ─── Typewriter hook ─────────────────────────────────────────
@@ -70,7 +54,7 @@ function useTypewriter(fullText: string, speed = 18, onDone?: () => void) {
     useEffect(() => {
         let i = 0;
         doneCalled.current = false;
-        setText("");
+        const reset = setTimeout(() => setText(""), 0);
         const interval = setInterval(() => {
             i++;
             if (i > fullText.length) {
@@ -83,7 +67,10 @@ function useTypewriter(fullText: string, speed = 18, onDone?: () => void) {
             }
             setText(fullText.slice(0, i));
         }, speed);
-        return () => clearInterval(interval);
+        return () => {
+            clearTimeout(reset);
+            clearInterval(interval);
+        };
     }, [fullText, speed]); // eslint-disable-line
     return text;
 }
@@ -119,13 +106,32 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
     }, { scope: containerRef, dependencies: [stage] });
 
     // ─── Submit flow ─────────────────────────────────────────
+    const pushTyped = useCallback((msg: Extract<FlowMsg, { type: "text" }>) => {
+        return new Promise<void>(resolve => {
+            setThread(t => [...t, { ...msg, done: false }]);
+            const dur = Math.min(Math.max(msg.content.length * 22, 600), 3200);
+            setTimeout(() => {
+                setThread(t => t.map(m => m.id === msg.id ? { ...m, done: true } as FlowMsg : m));
+                resolve();
+            }, dur);
+        });
+    }, []);
+
+    const markDone = useCallback(() => {
+        setThread(t => {
+            const last = t[t.length - 1];
+            if (!last || last.role !== "assistant") return t;
+            return [...t.slice(0, -1), { ...last, done: true } as FlowMsg];
+        });
+    }, []);
+
     const handleSubmit = useCallback(async (rawPrompt?: string) => {
         const prompt = (rawPrompt ?? input).trim();
         if (!prompt || busy) return;
         setBusy(true);
         setInput("");
 
-        const userMsg: FlowMsg = { id: `u-${Date.now()}`, role: "user", content: prompt };
+        const userMsg: FlowMsg = { id: `u-${Date.now()}`, role: "user", content: DEMO_RC_PROMPT };
         setThread(t => [...t, userMsg]);
         if (stage === "welcome") setStage("chat");
 
@@ -135,7 +141,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
 
         await sleep(1100);
 
-        const intent = detectIntent(prompt);
+        const intent = detectIntent(DEMO_RC_PROMPT);
 
         // Remove thinking, push intro text
         setThread(t => t.filter(m => m.id !== thinkingId));
@@ -220,28 +226,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
 
         setBusy(false);
         setTimeout(() => inputRef.current?.focus(), 100);
-    }, [input, busy, stage]);
-
-    // Helper: push a message and wait for its typewriter to complete
-    const pushTyped = (msg: Extract<FlowMsg, { type: "text" }>) => {
-        return new Promise<void>(resolve => {
-            setThread(t => [...t, { ...msg, done: false }]);
-            // approx typing duration based on length
-            const dur = Math.min(Math.max(msg.content.length * 22, 600), 3200);
-            setTimeout(() => {
-                setThread(t => t.map(m => m.id === msg.id ? { ...m, done: true } as any : m));
-                resolve();
-            }, dur);
-        });
-    };
-
-    const markDone = () => {
-        setThread(t => {
-            const last = t[t.length - 1];
-            if (!last || last.role !== "assistant") return t;
-            return [...t.slice(0, -1), { ...last, done: true } as any];
-        });
-    };
+    }, [input, busy, stage, pushTyped, markDone]);
 
     return (
         <div ref={containerRef} className="absolute inset-0 bg-[#050507] flex flex-col z-50 overflow-hidden font-mono">
@@ -396,7 +381,7 @@ function WelcomeHero({
                             type="text"
                             value={input}
                             onChange={e => setInput(e.target.value)}
-                            placeholder="ej: quiero construir un carro RC con sensores"
+                            placeholder={DEMO_RC_PROMPT}
                             className="flex-1 bg-transparent outline-none text-[13px] text-white placeholder:text-white/30 font-mono"
                             autoFocus
                         />
@@ -441,7 +426,7 @@ function ThreadItem({
     if (msg.role === "user") {
         return (
             <div className="flex justify-end">
-                <div className="max-w-[80%] bg-white/[0.05] border border-white/10 px-4 py-2.5 text-[13px] text-white/85 leading-relaxed">
+                <div className="max-w-[82%] rounded-lg rounded-tr-sm bg-white/[0.075] shadow-[0_14px_45px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.08)] px-4 py-2.5 text-[13px] text-white/90 leading-relaxed">
                     {msg.content}
                 </div>
             </div>
@@ -512,7 +497,8 @@ function TextBubble({ fullText, done }: { fullText: string; done: boolean }) {
     const segments = (done ? fullText : displayed).split(/(\*\*[^*]+\*\*)/g);
     return (
         <AvatarBubble>
-            <div className="bg-[#0d0d12] border border-white/8 px-4 py-3 text-[13px] leading-relaxed text-gray-300 max-w-[90%]">
+            <div className="relative overflow-hidden rounded-lg rounded-tl-sm bg-[linear-gradient(135deg,rgba(0,240,255,0.09),rgba(13,13,18,0.96)_34%,rgba(244,63,94,0.08))] shadow-[0_18px_55px_rgba(0,0,0,0.32),inset_0_0_0_1px_rgba(255,255,255,0.08)] px-4 py-3 text-[13px] leading-relaxed text-gray-200 max-w-[90%]">
+                <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00f0ff]/60 to-transparent" />
                 {segments.map((s, i) => {
                     if (s.startsWith("**") && s.endsWith("**")) {
                         return <span key={i} className="text-white font-bold">{s.slice(2, -2)}</span>;

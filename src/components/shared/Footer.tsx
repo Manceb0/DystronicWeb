@@ -1,17 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CircuitBoard } from "lucide-react";
 import { useTranslation } from "@/i18n/LanguageProvider";
+import DemoRequestModal, { useDemoRequest } from "./DemoRequestModal";
 
 export default function Footer() {
     const pathname = usePathname();
     const { t } = useTranslation();
+    const demo = useDemoRequest();
+    const [subscribeEmail, setSubscribeEmail] = useState("");
 
     if (pathname === "/ai-builder") {
         return null;
     }
+
+    const handleSubscribe = () => {
+        demo.request(
+            "subscribe",
+            subscribeEmail ? `Email del usuario: ${subscribeEmail}` : undefined
+        );
+    };
 
     return (
         <footer className="w-full bg-[#121215] border-t border-white/5 py-12 mt-20 relative z-10">
@@ -54,16 +65,44 @@ export default function Footer() {
                     <div className="bg-[#050507] rounded-sm p-3 border border-white/5 font-mono text-xs text-gray-400">
                         <span className="text-[#39ff14]">guest@dystronic:~$</span> ./subscribe.sh<br />
                         <span className="text-gray-600">{t("footer.subscribe")}</span>
-                        <div className="mt-2 flex">
-                            <input type="text" className="bg-transparent border-b border-white/20 outline-none w-full text-white placeholder:text-gray-600 focus:border-[#00f0ff]" placeholder="user@email.com" />
-                            <button className="text-[#00f0ff] ml-2 font-bold">{">>"}</button>
-                        </div>
+                        <form
+                            onSubmit={(e) => { e.preventDefault(); handleSubscribe(); }}
+                            className="mt-2 flex"
+                        >
+                            <input
+                                type="email"
+                                value={subscribeEmail}
+                                onChange={(e) => setSubscribeEmail(e.target.value)}
+                                className="bg-transparent border-b border-white/20 outline-none w-full text-white placeholder:text-gray-600 focus:border-[#00f0ff]"
+                                placeholder="user@email.com"
+                            />
+                            <button
+                                type="submit"
+                                className="text-[#00f0ff] ml-2 font-bold hover:text-white transition-colors"
+                                aria-label="Suscribirse"
+                            >
+                                {">>"}
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
-            <div className="container mx-auto px-4 mt-12 pt-8 border-t border-white/5 text-center text-xs text-gray-600 font-mono">
-                © {new Date().getFullYear()} DYSTRONIC. {t("common.rights")}
+            <div className="container mx-auto px-4 mt-12 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600 font-mono">
+                <span>© {new Date().getFullYear()} DYSTRONIC. {t("common.rights")}</span>
+                <button
+                    onClick={() => demo.request("feature-locked")}
+                    className="text-gray-600 hover:text-[#00f0ff] transition-colors text-[10px] uppercase tracking-widest"
+                >
+                    Solicitar demo completa
+                </button>
             </div>
+
+            <DemoRequestModal
+                open={demo.open}
+                onClose={demo.close}
+                context={demo.context}
+                extraInfo={demo.extraInfo}
+            />
         </footer>
     );
 }

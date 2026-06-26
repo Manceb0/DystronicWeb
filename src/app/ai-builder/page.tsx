@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import {
     ArrowLeft, Edit3, MessageSquare, Download,
     Cpu, Zap, Radio, Activity, LayoutTemplate, MonitorSmartphone, Share2, CornerDownRight, Bot, List, Send,
@@ -20,6 +22,8 @@ import { localizePart, localizeScenario } from "@/i18n/content";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import PartDetailSheet from "@/components/ai-builder/PartDetailSheet";
 import ChatWelcomeFlow from "@/components/ai-builder/ChatWelcomeFlow";
+
+gsap.registerPlugin(useGSAP);
 
 type ViewMode = "overview" | "wiring" | "learn" | "purchase";
 type LeftPanelView = "plan" | "chat";
@@ -50,6 +54,7 @@ function AIBuilderContent() {
     const [boardNodes, setBoardNodes] = useState<typeof MOCK_SCENARIOS[0]["nodes"]>([]);
     const [boardZoom, setBoardZoom] = useState(1);
     const [inspectedPartId, setInspectedPartId] = useState<string | null>(null);
+    const builderShellRef = useRef<HTMLDivElement>(null);
     const boardScrollRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLDivElement>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
@@ -179,6 +184,60 @@ function AIBuilderContent() {
     const CANVAS_W = 1200;
     const CANVAS_H = 800;
     const MAX_NODE_Y = CANVAS_H - NODE_H - BOARD_HEADER;
+
+    const frameBoardForViewport = useCallback(() => {
+        const el = boardScrollRef.current;
+        if (!el || typeof window === "undefined") return;
+
+        const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+        const nextZoom = isMobile
+            ? Math.min(0.62, Math.max(0.42, (window.innerWidth - 32) / 860))
+            : 1;
+
+        setBoardZoom(nextZoom);
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const focusX = isMobile ? 610 : 0;
+                const focusY = isMobile ? 230 : 0;
+                el.scrollLeft = isMobile ? Math.max(0, focusX * nextZoom - el.clientWidth / 2) : 0;
+                el.scrollTop = isMobile ? Math.max(0, focusY * nextZoom - el.clientHeight * 0.35) : 0;
+            });
+        });
+    }, []);
+
+    useEffect(() => {
+        if (activeTab !== "wiring" || isGenerating || boardNodes.length === 0) return;
+        frameBoardForViewport();
+    }, [activeTab, isGenerating, projectId, boardNodes.length, frameBoardForViewport]);
+
+    useGSAP(() => {
+        const mm = gsap.matchMedia();
+
+        mm.add("(max-width: 1023px)", () => {
+            gsap.from(".builder-board-shell", {
+                opacity: 0,
+                y: 22,
+                scale: 0.985,
+                duration: 0.55,
+                ease: "power3.out",
+            });
+            gsap.from(".builder-side-panel", {
+                opacity: 0,
+                y: 18,
+                duration: 0.45,
+                ease: "power2.out",
+                stagger: 0.06,
+                delay: 0.15,
+            });
+        });
+
+        mm.add("(prefers-reduced-motion: reduce)", () => {
+            gsap.set([".builder-board-shell", ".builder-side-panel"], { clearProps: "all" });
+        });
+
+        return () => mm.revert();
+    }, { scope: builderShellRef, dependencies: [hasStartedBuilder, activeTab, projectId] });
 
     const snapToGrid = useCallback((value: number) => Math.round(value / GRID) * GRID, []);
 
@@ -349,7 +408,7 @@ function AIBuilderContent() {
     };
 
     return (
-        <div className="flex flex-col h-screen w-full bg-[#050507] text-white overflow-hidden font-mono text-sm relative z-50 fixed inset-0">
+        <div className="flex flex-col h-[100dvh] w-full bg-[#050507] text-white overflow-hidden font-mono text-sm relative z-50 fixed inset-0">
 
             {/* Welcome chat flow — shown until user picks a project */}
             {!hasStartedBuilder && (
@@ -366,9 +425,9 @@ function AIBuilderContent() {
         TOP BAR
         ========================================
       */}
-            <div className="h-12 border-b border-white/5 flex items-center justify-between px-4 bg-[#0a0a0d] shrink-0">
+            <div className="h-12 border-b border-white/5 flex items-center justify-between gap-2 px-2 sm:px-4 bg-[#0a0a0d] shrink-0">
                 {/* Left: back + project name */}
-                <div className="flex items-center gap-3 w-[220px]">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 lg:w-[220px] lg:flex-none">
                     <button onClick={() => router.push("/")} className="text-gray-600 hover:text-white transition-colors p-1">
                         <ArrowLeft size={14} />
                     </button>
@@ -379,7 +438,7 @@ function AIBuilderContent() {
                 </div>
 
                 {/* Center: icon tabs — matches reference design */}
-                <div className="flex items-center gap-0.5 bg-[#111114] border border-white/[0.07] p-0.5">
+                <div className="flex items-center gap-0.5 bg-[#111114] border border-white/[0.07] p-0.5 overflow-x-auto max-w-[52vw] sm:max-w-none">
                     {([
                         { mode: "overview",  icon: <ScanLine size={13} />,    label: t("aiBuilder.overview") },
                         { mode: "wiring",    icon: <Workflow size={13} />,     label: t("aiBuilder.wiring") },
@@ -406,7 +465,7 @@ function AIBuilderContent() {
                 </div>
 
                 {/* Right: actions + publish */}
-                <div className="flex items-center gap-2 w-[260px] justify-end">
+                <div className="hidden sm:flex items-center gap-2 w-[260px] justify-end">
                     <LanguageSwitcher />
                     <div className="flex items-center gap-1 text-[10px] text-gray-600 font-mono border border-white/[0.07] px-2 py-1 bg-[#111114]">
                         <Clock size={11} />
@@ -425,10 +484,10 @@ function AIBuilderContent() {
         MAIN THREE-COLUMN LAYOUT
         ========================================
       */}
-            <div className="flex-1 flex overflow-hidden min-h-0">
+            <div ref={builderShellRef} className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0 custom-scrollbar">
 
                 {/* === LEFT COLUMN: PLAN / COMPONENT CHAT === */}
-                <div className="w-[320px] lg:w-[380px] shrink-0 border-r border-[#1a1a20] flex flex-col bg-[#050507] min-h-0">
+                <div className="builder-side-panel order-2 lg:order-1 w-full lg:w-[380px] shrink-0 border-t lg:border-t-0 lg:border-r border-[#1a1a20] flex flex-col bg-[#050507] min-h-[420px] max-h-[52dvh] lg:min-h-0 lg:max-h-none">
 
                     <div className="shrink-0 border-b border-[#1a1a20]">
                         <div className="flex">
@@ -608,26 +667,26 @@ function AIBuilderContent() {
                 </div>
 
                 {/* === CENTER COLUMN: DYNAMIC CANVAS === */}
-                <div className="flex-1 relative bg-[#09090b] overflow-hidden flex flex-col min-h-0">
+                <div className="builder-board-shell order-1 lg:order-2 flex-none lg:flex-1 relative bg-[#09090b] overflow-hidden flex flex-col h-[54dvh] min-h-[410px] max-h-[520px] lg:h-auto lg:min-h-0 lg:max-h-none shadow-[0_18px_80px_rgba(0,240,255,0.11)] lg:shadow-none">
 
                     {/* DYNAMIC CONTENT SWITCH BASED ON TAB */}
                     {activeTab === "wiring" && !isGenerating && (
                         <>
                         {/* Zoom controls */}
-                        <div className="absolute bottom-4 right-4 z-30 flex items-center gap-1 bg-[#0a0a0d]/90 border border-white/10 px-2 py-1 backdrop-blur-sm">
+                        <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-30 flex items-center gap-1 bg-[#0a0a0d]/90 border border-white/10 px-2 py-1 backdrop-blur-sm shadow-[0_0_28px_rgba(0,240,255,0.16)]">
                             <button onClick={() => setBoardZoom(z => Math.min(2, z + 0.1))} className="p-1 text-gray-400 hover:text-white transition-colors" title="Zoom in (+)"><ZoomIn size={14} /></button>
                             <span className="text-[10px] text-gray-500 font-mono w-9 text-center tabular-nums">{Math.round(boardZoom * 100)}%</span>
                             <button onClick={() => setBoardZoom(z => Math.max(0.3, z - 0.1))} className="p-1 text-gray-400 hover:text-white transition-colors" title="Zoom out (-)"><ZoomOut size={14} /></button>
                             <div className="w-px h-4 bg-white/10 mx-0.5" />
-                            <button onClick={() => setBoardZoom(1)} className="p-1 text-gray-400 hover:text-white transition-colors" title="Reset zoom"><RotateCcw size={13} /></button>
+                            <button onClick={frameBoardForViewport} className="p-1 text-gray-400 hover:text-white transition-colors" title="Reset zoom"><RotateCcw size={13} /></button>
                         </div>
 
-                        <div ref={boardScrollRef} className="flex-1 w-full h-full relative z-10 overflow-auto p-3 min-h-0">
-                        <div style={{ transform: `scale(${boardZoom})`, transformOrigin: "top left", width: `${1200 * boardZoom}px`, height: `${800 * boardZoom}px`, minWidth: `${1200 * boardZoom}px`, minHeight: `${800 * boardZoom}px` }}>
+                        <div ref={boardScrollRef} className="flex-1 w-full h-full relative z-10 overflow-auto p-2 sm:p-3 min-h-0 scroll-smooth">
+                        <div style={{ transform: `scale(${boardZoom})`, transformOrigin: "top left", width: `${CANVAS_W * boardZoom}px`, height: `${CANVAS_H * boardZoom}px`, minWidth: `${CANVAS_W * boardZoom}px`, minHeight: `${CANVAS_H * boardZoom}px` }}>
                             <div
                                 ref={canvasRef}
                                 onPointerDown={handleBoardPointerDown}
-                                className="w-[1200px] h-[800px] shrink-0 relative rounded-sm border border-[#00f0ff]/20 bg-[#0c0c10] cursor-grab active:cursor-grabbing"
+                                className="w-[1200px] h-[800px] shrink-0 relative rounded-sm border border-[#00f0ff]/20 bg-[#0c0c10] cursor-grab active:cursor-grabbing shadow-[0_0_46px_rgba(0,240,255,0.08)]"
                                 style={{
                                     backgroundImage: `
                                         linear-gradient(to right, rgba(0,240,255,0.12) 1px, transparent 1px),
@@ -924,7 +983,7 @@ function AIBuilderContent() {
                 </div>
 
                 {/* === RIGHT COLUMN: PARTS LIST / COMPONENT INSPECT === */}
-                <div className={`${inspectedPartId ? "w-[420px]" : "w-[300px]"} shrink-0 border-l border-[#1a1a20] bg-[#050507] flex flex-col relative z-20 min-h-0 transition-all duration-200`}>
+                <div className={`${inspectedPartId ? "lg:w-[420px]" : "lg:w-[300px]"} builder-side-panel order-3 w-full shrink-0 border-t lg:border-t-0 lg:border-l border-[#1a1a20] bg-[#050507] flex flex-col relative z-20 min-h-[360px] max-h-[48dvh] lg:min-h-0 lg:max-h-none transition-all duration-200`}>
 
                     {inspectedPartId ? (() => {
                         const ip = getPart(inspectedPartId)!;

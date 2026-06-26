@@ -3,6 +3,7 @@ import { Inter, Roboto_Mono, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
+import MobileDemoBanner from "@/components/shared/MobileDemoBanner";
 import { ClientProviders } from "@/components/providers/ClientProviders";
 
 const inter = Inter({
@@ -46,6 +47,7 @@ export default function RootLayout({
           </div>
 
           <Navbar />
+          <MobileDemoBanner />
           <main className="flex-1 flex flex-col w-full relative z-0 mt-16">{children}</main>
           <Footer />
         </ClientProviders>

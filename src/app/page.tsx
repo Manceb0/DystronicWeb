@@ -7,7 +7,7 @@ import Link from "next/link";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowRight, ArrowUpRight, Bot, ChevronDown, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Bot, ChevronDown, CheckCircle2, MessageCircle } from "lucide-react";
 
 import BlurText from "@/components/BlurText";
 import ShinyText from "@/components/ShinyText";
@@ -27,6 +27,7 @@ const DISPLAY = { fontFamily: "var(--font-display)" } as const;
 export default function Home() {
   const { t } = useTranslation();
   const pageRef = useRef<HTMLDivElement>(null);
+  const whatsappHref = `https://wa.me/18296486202?text=${encodeURIComponent("Hola Manuel, quiero crear un carro RC con el AI Builder de Dystronic.")}`;
 
   const headlineLines = useMemo(() => [
     { text: t("home.headline1"), outline: false },
@@ -133,7 +134,7 @@ export default function Home() {
     <div ref={pageRef} className="flex flex-col min-h-screen bg-[#09090b] text-white overflow-x-hidden">
 
       {/* ═══ HERO ════════════════════════════════════════════ */}
-      <section className="hero-section relative min-h-[calc(100vh-4rem)] overflow-hidden">
+      <section className="hero-section relative lg:min-h-[calc(100vh-4rem)] overflow-hidden">
         {/* Grid bg */}
         <div aria-hidden className="absolute inset-0 pointer-events-none" style={{
           backgroundImage: `linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)`,
@@ -144,8 +145,10 @@ export default function Home() {
           DYS-001 // ACTIVE<br />Est. 2024
         </p>
 
+        <HeroKitShowcase />
+
         {/* LEFT: text */}
-        <div className="relative z-10 flex flex-col justify-center min-h-[calc(100vh-4rem)] py-20 px-6 md:px-12 lg:px-16 lg:w-[54%]">
+        <div className="relative z-10 flex flex-col justify-center lg:min-h-[calc(100vh-4rem)] pt-5 pb-8 lg:py-20 px-6 md:px-12 lg:px-16 lg:w-[54%]">
 
           {/* Eyebrow — ShinyText for metallic sweep on cyan */}
           <div className="flex items-center gap-3 mb-10">
@@ -182,40 +185,68 @@ export default function Home() {
           <div className="h-body">
             {/* Description — BlurText word-by-word */}
             <div className="mb-7">
-              <BlurText
-                text={t("home.description")}
-                delay={60}
-                animateBy="words"
-                direction="bottom"
-                stepDuration={0.3}
-                className="text-white/45 text-[15px] leading-relaxed font-light max-w-[36ch]"
-              />
+              <p className="sm:hidden text-white/50 text-[14px] leading-relaxed font-light max-w-[34ch]">
+                {t("home.description")}
+              </p>
+              <div className="hidden sm:block">
+                <BlurText
+                  text={t("home.description")}
+                  delay={60}
+                  animateBy="words"
+                  direction="bottom"
+                  stepDuration={0.3}
+                  className="text-white/45 text-[15px] leading-relaxed font-light max-w-[36ch]"
+                />
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-3 mb-8">
-              <Link href="/store">
-                <button className="group inline-flex items-center gap-2.5 px-5 py-2.5 bg-[#f43f5e] text-white font-mono text-[13px] font-bold tracking-wider uppercase transition-all duration-200 hover:bg-[#e11d48]">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 mb-8 max-w-[520px]">
+              <Link href="/store" className="col-span-1 order-2 sm:order-none">
+                <button className="group inline-flex w-full sm:w-auto items-center justify-center gap-2.5 px-4 sm:px-5 py-3 sm:py-2.5 bg-white/[0.06] sm:bg-[#f43f5e] border border-white/12 sm:border-transparent text-white font-mono text-[12px] sm:text-[13px] font-bold tracking-wider uppercase transition-all duration-200 hover:bg-[#e11d48]">
                   {t("home.exploreParts")}
                   <ArrowRight size={12} className="transition-transform duration-200 group-hover:translate-x-0.5" />
                 </button>
               </Link>
-              <MagneticButton distance={0.5}>
-                <Link href="/ai-builder">
-                  <button className="group relative inline-flex items-center gap-3 px-5 py-2.5 border border-[#38bdf8]/35 text-[#38bdf8]/75 overflow-hidden transition-all duration-300 hover:border-[#38bdf8] hover:text-[#38bdf8] hover:shadow-[0_0_22px_rgba(56,189,248,0.14)]">
-                    <span aria-hidden className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-[#38bdf8]/10 to-transparent pointer-events-none" />
-                    <Bot size={12} className="relative" />
-                    <span className="relative font-mono text-[13px] font-bold tracking-wider uppercase">{t("home.tryAiBuilder")}</span>
-                    <span className="relative flex h-[6px] w-[6px] shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#38bdf8] opacity-50" />
-                      <span className="relative inline-flex h-[6px] w-[6px] rounded-full bg-[#38bdf8]" />
-                    </span>
-                  </button>
-                </Link>
-              </MagneticButton>
+              <div className="col-span-2 sm:col-span-1 order-1 sm:order-none">
+                <MagneticButton distance={0.5}>
+                  <Link href="/ai-builder" className="block h-full">
+                    <button className="group relative inline-flex h-full w-full sm:w-auto items-center justify-center gap-2 sm:gap-3 px-4 sm:px-5 py-3.5 sm:py-2.5 bg-[#00f0ff] text-black overflow-hidden transition-all duration-300 shadow-[0_0_0_1px_rgba(0,240,255,0.35),0_18px_55px_rgba(0,240,255,0.25)] hover:bg-[#39ff14] hover:shadow-[0_0_0_1px_rgba(57,255,20,0.45),0_18px_55px_rgba(57,255,20,0.22)] active:scale-[0.985]">
+                      <span aria-hidden className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none" />
+                      <Bot size={12} className="relative" />
+                      <span className="relative font-mono text-[12px] sm:text-[13px] font-bold tracking-wider uppercase">{t("home.tryAiBuilder")}</span>
+                      <span className="relative flex h-[6px] w-[6px] shrink-0">
+                        <span className="relative inline-flex h-[6px] w-[6px] rounded-full bg-black" />
+                      </span>
+                    </button>
+                  </Link>
+                </MagneticButton>
+              </div>
+              <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="col-span-1 sm:col-span-1 order-3 sm:order-none group inline-flex items-center justify-center gap-2.5 px-4 sm:px-5 py-3 sm:py-2.5 bg-[#25D366] text-black font-mono text-[12px] sm:text-[13px] font-bold tracking-wider uppercase transition-colors duration-200 hover:bg-[#1ebe57] shadow-[0_18px_45px_rgba(37,211,102,0.18)] active:scale-[0.985]">
+                <MessageCircle size={13} />
+                WhatsApp
+                <ArrowUpRight size={12} className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </a>
             </div>
 
             {/* Stats — CountUp numbers */}
-            <div className="flex items-center gap-6 pt-5 border-t border-white/[0.06]">
+            <div className="mb-8 hidden sm:grid grid-cols-[1.25fr_0.9fr_0.9fr] gap-2 max-w-[520px]">
+              {[
+                { img: "/mock/kit-car.png", name: "Carro RC", meta: "Demo principal" },
+                { img: "/mock/l298n.jpg", name: "L298N", meta: "Driver" },
+                { img: "/mock/dc-gear.jpg", name: "Motores", meta: "x2" },
+              ].map((item) => (
+                <div key={item.name} className="group relative min-h-[92px] overflow-hidden border border-white/[0.08] bg-white/[0.025]">
+                  <img src={item.img} alt={item.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/5" />
+                  <div className="absolute bottom-2 left-2 right-2">
+                    <p className="text-[11px] font-bold text-white leading-tight">{item.name}</p>
+                    <p className="font-mono text-[8px] uppercase tracking-wider text-[#38bdf8]">{item.meta}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden sm:flex items-center gap-6 pt-5 border-t border-white/[0.06]">
               <div>
                 <p className="font-mono text-xl font-bold tabular-nums flex items-end gap-0.5">
                   <CountUp to={5000} from={0} duration={2} separator="," className="text-white" />
@@ -240,10 +271,8 @@ export default function Home() {
           </div>
         </div>
 
-        <HeroKitShowcase />
-
         {/* Scroll cue */}
-        <div className="scroll-cue absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20 lg:left-[27%]">
+        <div className="scroll-cue absolute bottom-8 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 z-20 lg:left-[27%]">
           <span className="font-mono text-[8px] text-white/20 tracking-[0.3em] uppercase">{t("common.scroll")}</span>
           <ChevronDown size={14} className="text-white/20" />
         </div>

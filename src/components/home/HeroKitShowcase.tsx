@@ -64,12 +64,13 @@ const FEATURED_KITS = [
 export default function HeroKitShowcase() {
   const { t, locale } = useTranslation();
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [activeKit, setActiveKit] = useState(0);
+  const [activeKit, setActiveKit] = useState(1);
   const [paused, setPaused] = useState(false);
   const kit = FEATURED_KITS[activeKit];
 
   useEffect(() => {
     if (paused) return;
+    if (window.matchMedia("(max-width: 639px)").matches) return;
     const id = setInterval(() => setActiveKit((i) => (i + 1) % FEATURED_KITS.length), ROTATE_MS);
     return () => clearInterval(id);
   }, [paused]);
@@ -105,15 +106,44 @@ export default function HeroKitShowcase() {
   // Initial shell entry
   useGSAP(
     () => {
-      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (reduced) return;
-      gsap.from(".kit-shell", {
-        x: 24,
-        opacity: 0,
-        duration: 0.85,
-        ease: "power3.out",
-        delay: 0.1,
+      const mm = gsap.matchMedia();
+      mm.add({
+        isMobile: "(max-width: 639px)",
+        reduceMotion: "(prefers-reduced-motion: reduce)",
+      }, (context) => {
+        const { isMobile, reduceMotion } = context.conditions ?? {};
+        if (reduceMotion) return;
+
+        gsap.from(".kit-shell", {
+          x: isMobile ? 0 : 24,
+          y: isMobile ? -18 : 0,
+          opacity: 0,
+          filter: "blur(6px)",
+          duration: isMobile ? 0.7 : 0.85,
+          ease: "power3.out",
+          delay: 0.1,
+        });
+
+        if (isMobile) {
+          gsap.from(".kit-photo img", {
+            scale: 1.12,
+            y: 18,
+            duration: 1.1,
+            ease: "power3.out",
+            delay: 0.12,
+          });
+          gsap.from(".kit-text > *", {
+            y: 12,
+            opacity: 0,
+            filter: "blur(4px)",
+            stagger: 0.055,
+            duration: 0.46,
+            ease: "power2.out",
+            delay: 0.34,
+          });
+        }
       });
+      return () => mm.revert();
     },
     { scope: wrapRef }
   );
@@ -121,11 +151,17 @@ export default function HeroKitShowcase() {
   return (
     <div
       ref={wrapRef}
-      className="h-img-wrap hidden lg:flex absolute top-0 right-0 w-[46%] h-full p-1.5"
+      className="h-img-wrap flex relative z-10 lg:absolute lg:top-0 lg:right-0 w-full lg:w-[46%] h-[310px] sm:h-[440px] lg:h-full px-0 pt-0 pb-0 sm:p-1.5 mb-4 lg:mb-0"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="kit-shell relative flex flex-col w-full h-full border border-white/10 bg-[#0a0a0d] overflow-hidden">
+      <div
+        className="kit-shell mobile-hero-scene relative flex flex-col w-full h-full border-0 sm:border sm:border-white/10 bg-[#0a0a0d] overflow-hidden shadow-[0_32px_110px_rgba(0,240,255,0.22),0_22px_70px_rgba(244,63,94,0.18)] lg:shadow-none"
+        style={{
+          background:
+            "linear-gradient(145deg, rgba(0,240,255,0.10), rgba(244,63,94,0.08) 42%, rgba(10,10,13,0.98) 72%)",
+        }}
+      >
 
         {/* Subtle particles — single subtle accent, not decoration */}
         <div className="absolute inset-0 opacity-25 pointer-events-none">
@@ -142,12 +178,12 @@ export default function HeroKitShowcase() {
         </div>
 
         {/* Header strip */}
-        <div className="relative z-10 px-5 py-4 flex items-center justify-between border-b border-white/[0.06]">
+        <div className="relative z-10 px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: kit.accent }} />
-            <span className="font-mono text-[10px] text-white/55 tracking-[0.32em] uppercase">{t("heroKit.spotlight")}</span>
+            <span className="font-mono text-[9px] sm:text-[10px] text-white/60 tracking-[0.26em] sm:tracking-[0.32em] uppercase">{t("heroKit.spotlight")}</span>
           </div>
-          <span className="font-mono text-[10px] text-white/30 tabular-nums tracking-wider">
+          <span className="font-mono text-[9px] sm:text-[10px] text-white/35 tabular-nums tracking-wider">
             {String(activeKit + 1).padStart(2, "0")} / {String(FEATURED_KITS.length).padStart(2, "0")}
           </span>
         </div>
@@ -165,9 +201,10 @@ export default function HeroKitShowcase() {
               className="w-full h-full object-cover transition-transform duration-[1200ms] group-hover:scale-[1.04]"
             />
             {/* Photo tint */}
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/5 transition-colors duration-700" />
+            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-700" />
             {/* Bottom gradient for text legibility */}
-            <div className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black via-black/85 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-[70%] sm:h-[55%] bg-gradient-to-t from-black via-black/80 to-transparent" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(0,240,255,0.26),transparent_34%),radial-gradient(circle_at_86%_18%,rgba(244,63,94,0.22),transparent_30%)] mix-blend-screen opacity-70" />
           </div>
 
           {/* Accent vertical line — left edge */}
@@ -177,9 +214,9 @@ export default function HeroKitShowcase() {
           />
 
           {/* Tag chip — top right */}
-          <div className="absolute top-5 right-5 z-10">
+          <div className="absolute top-4 sm:top-5 right-4 sm:right-5 z-10">
             <span
-              className="font-mono text-[10px] tracking-[0.3em] uppercase px-3 py-1.5 border backdrop-blur-sm"
+              className="font-mono text-[8px] sm:text-[10px] tracking-[0.24em] sm:tracking-[0.3em] uppercase px-2.5 sm:px-3 py-1.5 border backdrop-blur-sm"
               style={{
                 borderColor: `${kit.accent}55`,
                 color: kit.accent,
@@ -191,26 +228,26 @@ export default function HeroKitShowcase() {
           </div>
 
           {/* Bottom content — clean editorial layout */}
-          <div className="kit-text absolute inset-x-0 bottom-0 p-6 z-10 space-y-3">
+          <div className="kit-text absolute inset-x-0 bottom-0 p-4 sm:p-6 z-10 space-y-2 sm:space-y-3">
             <div className="flex items-center gap-2">
               <Package size={11} className="text-white/40" />
-              <span className="font-mono text-[10px] text-white/40 tracking-wider uppercase">
+              <span className="font-mono text-[9px] sm:text-[10px] text-white/45 tracking-wider uppercase">
                 {kit.parts} {t("heroKit.parts")} · {translateLevel(locale, kit.level)}
               </span>
             </div>
 
             <h3
               style={DISPLAY as CSSProperties}
-              className="text-[clamp(28px,3.2vw,42px)] leading-[0.92] uppercase text-white"
+              className="text-[clamp(25px,9vw,36px)] sm:text-[clamp(28px,3.2vw,42px)] leading-[0.92] uppercase text-white"
             >
               {kit.name}
             </h3>
 
-            <p className="text-[13px] text-white/60 leading-relaxed max-w-[42ch]">
+            <p className="hidden sm:block text-[13px] text-white/60 leading-relaxed max-w-[42ch]">
               {kit.desc}
             </p>
 
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center justify-between pt-1 sm:pt-2">
               <span
                 className="font-mono text-lg font-bold tabular-nums"
                 style={{ color: kit.accent }}
@@ -229,7 +266,7 @@ export default function HeroKitShowcase() {
         </Link>
 
         {/* Kit selector strip — minimal, photos as thumbnails */}
-        <div className="relative z-10 border-t border-white/[0.06] bg-black/40 backdrop-blur-sm">
+        <div className="relative z-10 hidden sm:block border-t border-white/[0.06] bg-black/40 backdrop-blur-sm">
           <div className="grid grid-cols-4 gap-px bg-white/[0.04]">
             {FEATURED_KITS.map((item, i) => {
               const active = i === activeKit;

@@ -6,10 +6,33 @@ import { useAppContext } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/LanguageProvider";
 import { translateCategory } from "@/i18n/helpers";
+import DemoRequestModal, { useDemoRequest } from "@/components/shared/DemoRequestModal";
 
 export default function CartPage() {
     const { cart, removeFromCart, cartTotal } = useAppContext();
     const { t, locale } = useTranslation();
+    const demo = useDemoRequest();
+
+    const buildCartSummary = () => {
+        const lines = cart.map(item => {
+            const data = item.itemData as { name?: string; title?: string; price: number };
+            const label = data.name || data.title || "Item";
+            return `- ${label} × ${item.quantity} — $${(data.price * item.quantity).toFixed(2)}`;
+        });
+        const subtotal = cartTotal.toFixed(2);
+        const taxAmount = (cartTotal * 0.16).toFixed(2);
+        const shippingAmount = cartTotal > 100 ? "0.00" : "15.00";
+        const totalAmount = (cartTotal + cartTotal * 0.16 + (cartTotal > 100 ? 0 : 15)).toFixed(2);
+        return [
+            "PEDIDO:",
+            ...lines,
+            "",
+            `Subtotal: $${subtotal}`,
+            `Impuestos (16%): $${taxAmount}`,
+            `Envío: $${shippingAmount}`,
+            `Total: $${totalAmount}`,
+        ].join("\n");
+    };
 
     if (cart.length === 0) {
         return (
@@ -113,10 +136,28 @@ export default function CartPage() {
                             </label>
                         </div>
 
-                        <Button variant="orange" size="lg" className="w-full">{t("cart.simulateCheckout")}</Button>
+                        <Button
+                            variant="orange"
+                            size="lg"
+                            className="w-full"
+                            onClick={() => demo.request("checkout", buildCartSummary())}
+                        >
+                            {t("cart.simulateCheckout")}
+                        </Button>
+
+                        <p className="mt-3 text-[10px] text-gray-500 font-mono text-center leading-relaxed">
+                            Esta versión es una demo · el pago real lo activamos por solicitud
+                        </p>
                     </div>
                 </div>
             </div>
+
+            <DemoRequestModal
+                open={demo.open}
+                onClose={demo.close}
+                context={demo.context}
+                extraInfo={demo.extraInfo}
+            />
         </div>
     );
 }
