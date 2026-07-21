@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import gsap from "gsap";
@@ -10,7 +11,7 @@ import {
     ArrowLeft, Edit3, MessageSquare, Download,
     Cpu, Zap, Radio, Activity, LayoutTemplate, MonitorSmartphone, Share2, CornerDownRight, Bot, List, Send,
     ZoomIn, ZoomOut, RotateCcw, ShoppingCart, ExternalLink, X, Package, BadgeCheck, ChevronDown,
-    ScanLine, BookOpen, ShoppingBag, Workflow, Globe, Clock
+    ScanLine, BookOpen, ShoppingBag, Workflow, Globe, Clock, Box
 } from "lucide-react";
 import { Suspense } from "react";
 import { MOCK_SCENARIOS, MOCK_COMPONENTS, AIScenario, Part } from "@/lib/mock-data";
@@ -23,9 +24,13 @@ import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import PartDetailSheet from "@/components/ai-builder/PartDetailSheet";
 import ChatWelcomeFlow from "@/components/ai-builder/ChatWelcomeFlow";
 
+const MechanicalViewer = dynamic(() => import("@/components/ai-builder/MechanicalViewer"), {
+    ssr: false,
+});
+
 gsap.registerPlugin(useGSAP);
 
-type ViewMode = "overview" | "wiring" | "learn" | "purchase";
+type ViewMode = "overview" | "wiring" | "mechanical" | "learn" | "purchase";
 type LeftPanelView = "plan" | "chat";
 
 type ChatMessage = {
@@ -187,25 +192,26 @@ function AIBuilderContent() {
     const NODE_H = 192;
     const CANVAS_W = 1200;
     const CANVAS_H = 800;
+    const MIN_BOARD_ZOOM = 0.2;
     const MAX_NODE_Y = CANVAS_H - NODE_H - BOARD_HEADER;
 
     const frameBoardForViewport = useCallback(() => {
         const el = boardScrollRef.current;
         if (!el || typeof window === "undefined") return;
 
-        const isMobile = window.matchMedia("(max-width: 1023px)").matches;
-        const nextZoom = isMobile
-            ? Math.min(0.62, Math.max(0.42, (window.innerWidth - 32) / 860))
-            : 1;
+        const availableWidth = Math.max(1, el.clientWidth - 24);
+        const availableHeight = Math.max(1, el.clientHeight - 24);
+        const nextZoom = Math.min(
+            1,
+            Math.max(MIN_BOARD_ZOOM, Math.min(availableWidth / CANVAS_W, availableHeight / CANVAS_H)),
+        );
 
         setBoardZoom(nextZoom);
 
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                const focusX = isMobile ? 610 : 0;
-                const focusY = isMobile ? 230 : 0;
-                el.scrollLeft = isMobile ? Math.max(0, focusX * nextZoom - el.clientWidth / 2) : 0;
-                el.scrollTop = isMobile ? Math.max(0, focusY * nextZoom - el.clientHeight * 0.35) : 0;
+                el.scrollLeft = 0;
+                el.scrollTop = 0;
             });
         });
     }, []);
@@ -298,7 +304,7 @@ function AIBuilderContent() {
         const onWheel = (e: WheelEvent) => {
             if (!e.ctrlKey && !e.metaKey) return;
             e.preventDefault();
-            setBoardZoom(z => Math.min(2, Math.max(0.3, z - e.deltaY * 0.001)));
+            setBoardZoom(z => Math.min(2, Math.max(MIN_BOARD_ZOOM, z - e.deltaY * 0.001)));
         };
         el.addEventListener("wheel", onWheel, { passive: false });
         return () => el.removeEventListener("wheel", onWheel);
@@ -447,6 +453,7 @@ function AIBuilderContent() {
                     {([
                         { mode: "overview",  icon: <ScanLine size={13} />,    label: t("aiBuilder.overview") },
                         { mode: "wiring",    icon: <Workflow size={13} />,     label: t("aiBuilder.wiring") },
+                        { mode: "mechanical", icon: <Box size={13} />,          label: t("aiBuilder.mechanical") },
                         { mode: "learn",     icon: <BookOpen size={13} />,     label: t("aiBuilder.learn") },
                         { mode: "purchase",  icon: <ShoppingBag size={13} />,  label: t("aiBuilder.purchase") },
                     ] as { mode: ViewMode; icon: React.ReactNode; label: string }[]).map(({ mode, icon, label }) => {
@@ -681,7 +688,7 @@ function AIBuilderContent() {
                         <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-30 flex items-center gap-1 bg-[#0a0a0d]/90 border border-white/10 px-2 py-1 backdrop-blur-sm shadow-[0_0_28px_rgba(0,240,255,0.16)]">
                             <button onClick={() => setBoardZoom(z => Math.min(2, z + 0.1))} className="p-1 text-gray-400 hover:text-white transition-colors" title="Zoom in (+)"><ZoomIn size={14} /></button>
                             <span className="text-[10px] text-gray-500 font-mono w-9 text-center tabular-nums">{Math.round(boardZoom * 100)}%</span>
-                            <button onClick={() => setBoardZoom(z => Math.max(0.3, z - 0.1))} className="p-1 text-gray-400 hover:text-white transition-colors" title="Zoom out (-)"><ZoomOut size={14} /></button>
+                            <button onClick={() => setBoardZoom(z => Math.max(MIN_BOARD_ZOOM, z - 0.1))} className="p-1 text-gray-400 hover:text-white transition-colors" title="Zoom out (-)"><ZoomOut size={14} /></button>
                             <div className="w-px h-4 bg-white/10 mx-0.5" />
                             <button onClick={frameBoardForViewport} className="p-1 text-gray-400 hover:text-white transition-colors" title="Reset zoom"><RotateCcw size={13} /></button>
                         </div>
@@ -696,7 +703,7 @@ function AIBuilderContent() {
                         </div>
 
                         <div ref={boardScrollRef} className="flex-1 w-full h-full relative z-10 overflow-auto px-2 pb-2 sm:px-3 sm:pb-3 min-h-0 scroll-smooth">
-                        <div style={{ transform: `scale(${boardZoom})`, transformOrigin: "top left", width: `${CANVAS_W * boardZoom}px`, height: `${CANVAS_H * boardZoom}px`, minWidth: `${CANVAS_W * boardZoom}px`, minHeight: `${CANVAS_H * boardZoom}px` }}>
+                        <div style={{ width: `${CANVAS_W * boardZoom}px`, height: `${CANVAS_H * boardZoom}px`, minWidth: `${CANVAS_W * boardZoom}px`, minHeight: `${CANVAS_H * boardZoom}px` }}>
                             <div
                                 ref={canvasRef}
                                 onPointerDown={handleBoardPointerDown}
@@ -707,6 +714,7 @@ function AIBuilderContent() {
                                         linear-gradient(to bottom, rgba(0,240,255,0.12) 1px, transparent 1px)
                                     `,
                                     backgroundSize: `${GRID}px ${GRID}px`,
+                                    transform: `scale(${boardZoom})`,
                                     transformOrigin: "top left",
                                 }}
                             >
@@ -910,6 +918,10 @@ function AIBuilderContent() {
                         </div>
                         </div>
                         </>
+                    )}
+
+                    {activeTab === "mechanical" && !isGenerating && (
+                        <MechanicalViewer locale={locale} />
                     )}
 
                     {activeTab === "overview" && !isGenerating && (

@@ -275,6 +275,7 @@ export const es: TranslationDict = {
     clickBoardHint: "Haz clic en un componente del board",
     overview: "Resumen",
     wiring: "Cableado",
+    mechanical: "Mecánica",
     learn: "Aprender",
     purchase: "Comprar",
     difficulty: "Dificultad",

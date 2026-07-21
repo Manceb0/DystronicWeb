@@ -1,0 +1,218 @@
+"use client";
+
+import { useState } from "react";
+import { Canvas, type ThreeEvent } from "@react-three/fiber";
+import { Edges, Grid, OrbitControls } from "@react-three/drei";
+import { Box, Focus, MousePointer2, Rotate3D } from "lucide-react";
+import type { Locale } from "@/i18n/types";
+
+type MechanicalPart = {
+  id: string;
+  group: string;
+  label: { es: string; en: string };
+  color: string;
+};
+
+const MECHANICAL_PARTS: MechanicalPart[] = [
+  { id: "chassis", group: "structure", label: { es: "Chasis principal", en: "Main chassis" }, color: "#38bdf8" },
+  { id: "controller", group: "electronics", label: { es: "Soporte Arduino", en: "Arduino mount" }, color: "#00f0ff" },
+  { id: "battery", group: "electronics", label: { es: "Soporte de batería", en: "Battery holder" }, color: "#facc15" },
+  { id: "driver", group: "electronics", label: { es: "Soporte del driver", en: "Motor driver mount" }, color: "#a855f7" },
+  { id: "sensor", group: "electronics", label: { es: "Soporte ultrasónico", en: "Ultrasonic mount" }, color: "#39ff14" },
+  { id: "wheels", group: "motion", label: { es: "Ruedas y ejes", en: "Wheels and axles" }, color: "#f97316" },
+];
+
+function SelectableBox({
+  id,
+  selected,
+  color,
+  position,
+  size,
+  onSelect,
+}: {
+  id: string;
+  selected: boolean;
+  color: string;
+  position: [number, number, number];
+  size: [number, number, number];
+  onSelect: (id: string) => void;
+}) {
+  const handleClick = (event: ThreeEvent<MouseEvent>) => {
+    event.stopPropagation();
+    onSelect(id);
+  };
+
+  return (
+    <mesh position={position} onClick={handleClick} castShadow receiveShadow>
+      <boxGeometry args={size} />
+      <meshStandardMaterial
+        color={color}
+        transparent
+        opacity={selected ? 0.92 : 0.58}
+        roughness={0.42}
+        metalness={0.18}
+        emissive={selected ? color : "#000000"}
+        emissiveIntensity={selected ? 0.22 : 0}
+      />
+      <Edges color={selected ? "#ffffff" : color} threshold={15} />
+    </mesh>
+  );
+}
+
+function Wheel({ position, selected, onSelect }: { position: [number, number, number]; selected: boolean; onSelect: (id: string) => void }) {
+  return (
+    <mesh
+      position={position}
+      rotation={[Math.PI / 2, 0, 0]}
+      onClick={(event) => { event.stopPropagation(); onSelect("wheels"); }}
+      castShadow
+    >
+      <cylinderGeometry args={[0.72, 0.72, 0.42, 24]} />
+      <meshStandardMaterial color={selected ? "#f97316" : "#17171b"} roughness={0.72} metalness={0.1} />
+      <Edges color={selected ? "#fdba74" : "#52525b"} />
+    </mesh>
+  );
+}
+
+function RcCarAssembly({ selectedPart, onSelect }: { selectedPart: string; onSelect: (id: string) => void }) {
+  return (
+    <group rotation={[0, -0.16, 0]}>
+      <SelectableBox id="chassis" selected={selectedPart === "chassis"} color="#38bdf8" position={[0, 0, 0]} size={[5.6, 0.34, 3.3]} onSelect={onSelect} />
+      <SelectableBox id="controller" selected={selectedPart === "controller"} color="#00f0ff" position={[-1.1, 0.48, 0.15]} size={[1.55, 0.3, 1.25]} onSelect={onSelect} />
+      <SelectableBox id="battery" selected={selectedPart === "battery"} color="#facc15" position={[1.15, 0.52, 0.2]} size={[1.55, 0.42, 1.15]} onSelect={onSelect} />
+      <SelectableBox id="driver" selected={selectedPart === "driver"} color="#a855f7" position={[0.05, 0.48, -1]} size={[1.25, 0.3, 0.75]} onSelect={onSelect} />
+      <SelectableBox id="sensor" selected={selectedPart === "sensor"} color="#39ff14" position={[-2.35, 0.58, 0]} size={[0.34, 0.85, 1.35]} onSelect={onSelect} />
+
+      <Wheel position={[-1.85, -0.14, 1.82]} selected={selectedPart === "wheels"} onSelect={onSelect} />
+      <Wheel position={[1.85, -0.14, 1.82]} selected={selectedPart === "wheels"} onSelect={onSelect} />
+      <Wheel position={[-1.85, -0.14, -1.82]} selected={selectedPart === "wheels"} onSelect={onSelect} />
+      <Wheel position={[1.85, -0.14, -1.82]} selected={selectedPart === "wheels"} onSelect={onSelect} />
+    </group>
+  );
+}
+
+export default function MechanicalViewer({ locale }: { locale: Locale }) {
+  const [selectedPart, setSelectedPart] = useState("chassis");
+  const [viewKey, setViewKey] = useState(0);
+  const selected = MECHANICAL_PARTS.find((part) => part.id === selectedPart) ?? MECHANICAL_PARTS[0];
+  const copy = locale === "es"
+    ? {
+        title: "Vista mecánica",
+        subtitle: "Representación conceptual del chasis RC",
+        structure: "Estructura",
+        electronics: "Electrónica",
+        motion: "Movimiento",
+        selected: "Pieza seleccionada",
+        hint: "Arrastra para rotar, usa la rueda para acercar o alejar",
+        reset: "Centrar modelo",
+      }
+    : {
+        title: "Mechanical view",
+        subtitle: "Conceptual RC chassis representation",
+        structure: "Structure",
+        electronics: "Electronics",
+        motion: "Motion",
+        selected: "Selected part",
+        hint: "Drag to rotate, use the wheel to zoom",
+        reset: "Center model",
+      };
+
+  const groupLabels: Record<string, string> = {
+    structure: copy.structure,
+    electronics: copy.electronics,
+    motion: copy.motion,
+  };
+
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-[#08080b]">
+      <div className="absolute inset-x-0 top-0 z-20 h-11 border-b border-[#00f0ff]/15 bg-[#0a0a0d] px-3 sm:px-4 flex items-center gap-2">
+        <Box size={13} className="text-[#00f0ff]" />
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#00f0ff]">{copy.title}</p>
+          <p className="hidden sm:block text-[9px] text-gray-500 truncate">{copy.subtitle}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setViewKey((key) => key + 1)}
+          className="ml-auto inline-flex items-center gap-1.5 border border-white/10 px-2 py-1 text-[9px] text-gray-400 hover:border-[#00f0ff]/40 hover:text-white transition-colors"
+          title={copy.reset}
+        >
+          <Focus size={11} />
+          <span className="hidden sm:inline">{copy.reset}</span>
+        </button>
+      </div>
+
+      <Canvas
+        key={viewKey}
+        className="!absolute !inset-0 !top-11"
+        camera={{ position: [8.5, 6.2, 9.5], fov: 36, near: 0.1, far: 100 }}
+        dpr={[1, 1.5]}
+        shadows
+        onPointerMissed={() => setSelectedPart("chassis")}
+      >
+        <color attach="background" args={["#08080b"]} />
+        <fog attach="fog" args={["#08080b", 14, 26]} />
+        <ambientLight intensity={1.4} />
+        <directionalLight position={[6, 9, 5]} intensity={2.2} castShadow />
+        <pointLight position={[-6, 4, -4]} color="#00f0ff" intensity={18} distance={18} />
+        <RcCarAssembly selectedPart={selectedPart} onSelect={setSelectedPart} />
+        <Grid
+          position={[0, -0.5, 0]}
+          args={[30, 30]}
+          cellSize={0.7}
+          cellThickness={0.45}
+          cellColor="#164e63"
+          sectionSize={3.5}
+          sectionThickness={0.7}
+          sectionColor="#155e75"
+          fadeDistance={22}
+          fadeStrength={1.8}
+          infiniteGrid
+        />
+        <OrbitControls
+          makeDefault
+          enablePan
+          enableZoom
+          minDistance={5}
+          maxDistance={24}
+          minPolarAngle={0.35}
+          maxPolarAngle={Math.PI / 2.05}
+          target={[0, 0.2, 0]}
+        />
+      </Canvas>
+
+      <div className="absolute z-20 left-2 right-2 bottom-2 h-28 sm:left-3 sm:right-auto sm:top-14 sm:bottom-3 sm:h-auto sm:w-56 border border-white/10 bg-[#0a0a0d]/95 flex flex-col">
+        <div className="shrink-0 px-3 py-2 border-b border-white/8 flex items-center gap-2">
+          <MousePointer2 size={11} className="text-[#00f0ff]" />
+          <span className="text-[9px] uppercase tracking-widest text-gray-400">{copy.selected}</span>
+          <span className="ml-auto h-2 w-2" style={{ backgroundColor: selected.color }} />
+        </div>
+        <div className="flex-1 min-h-0 overflow-x-auto sm:overflow-y-auto p-2 flex sm:block gap-2 custom-scrollbar">
+          {Object.entries(groupLabels).map(([group, groupLabel]) => (
+            <div key={group} className="min-w-[150px] sm:min-w-0 sm:mb-3 last:mb-0">
+              <p className="px-1 mb-1 text-[8px] font-bold uppercase tracking-widest text-gray-600">{groupLabel}</p>
+              <div className="space-y-0.5">
+                {MECHANICAL_PARTS.filter((part) => part.group === group).map((part) => (
+                  <button
+                    key={part.id}
+                    type="button"
+                    onClick={() => setSelectedPart(part.id)}
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 text-left text-[10px] transition-colors ${selectedPart === part.id ? "bg-white/10 text-white" : "text-gray-500 hover:bg-white/5 hover:text-gray-300"}`}
+                  >
+                    <span className="h-1.5 w-1.5 shrink-0" style={{ backgroundColor: part.color }} />
+                    <span className="truncate">{part.label[locale]}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="absolute right-3 bottom-3 z-20 hidden md:flex items-center gap-2 bg-[#0a0a0d]/90 border border-white/10 px-2.5 py-1.5 text-[9px] text-gray-500">
+        <Rotate3D size={11} className="text-[#00f0ff]" />
+        {copy.hint}
+      </div>
+    </div>
+  );
+}
