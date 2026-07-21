@@ -277,6 +277,7 @@ export const en: TranslationDict = {
     wiring: "Wiring",
     mechanical: "Mechanical",
     learn: "Learn",
+    instructions: "Instructions",
     purchase: "Purchase",
     difficulty: "Difficulty",
     estTime: "Est. time",

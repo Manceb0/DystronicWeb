@@ -277,6 +277,7 @@ export const es: TranslationDict = {
     wiring: "Cableado",
     mechanical: "Mecánica",
     learn: "Aprender",
+    instructions: "Instrucciones",
     purchase: "Comprar",
     difficulty: "Dificultad",
     estTime: "Tiempo est.",

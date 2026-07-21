@@ -23,6 +23,7 @@ import { localizePart, localizeScenario } from "@/i18n/content";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import PartDetailSheet from "@/components/ai-builder/PartDetailSheet";
 import ChatWelcomeFlow from "@/components/ai-builder/ChatWelcomeFlow";
+import InstructionsView from "@/components/ai-builder/InstructionsView";
 
 const MechanicalViewer = dynamic(() => import("@/components/ai-builder/MechanicalViewer"), {
     ssr: false,
@@ -454,7 +455,7 @@ function AIBuilderContent() {
                         { mode: "overview",  icon: <ScanLine size={13} />,    label: t("aiBuilder.overview") },
                         { mode: "wiring",    icon: <Workflow size={13} />,     label: t("aiBuilder.wiring") },
                         { mode: "mechanical", icon: <Box size={13} />,          label: t("aiBuilder.mechanical") },
-                        { mode: "learn",     icon: <BookOpen size={13} />,     label: t("aiBuilder.learn") },
+                        { mode: "learn",     icon: <BookOpen size={13} />,     label: t("aiBuilder.instructions") },
                         { mode: "purchase",  icon: <ShoppingBag size={13} />,  label: t("aiBuilder.purchase") },
                     ] as { mode: ViewMode; icon: React.ReactNode; label: string }[]).map(({ mode, icon, label }) => {
                         const isActive = activeTab === mode;
@@ -954,23 +955,7 @@ function AIBuilderContent() {
                     )}
 
                     {activeTab === "learn" && !isGenerating && (
-                        <div className="w-full h-full p-12 overflow-y-auto relative z-10">
-                            <div className="max-w-3xl">
-                                <h2 className="text-3xl font-bold font-sans text-white mb-6 uppercase tracking-widest">{t("aiBuilder.learningPath")}</h2>
-                                <p className="text-gray-400 mb-8">{interpolate(t("aiBuilder.learningPathDesc"), { project: scenario.projectName })}</p>
-
-                                <div className="space-y-6">
-                                    {scenario.learningSteps.map((step, idx) => (
-                                        <div key={idx} className="bg-[#121215] border border-white/5 p-6 rounded-sm relative">
-                                            <div className="absolute top-6 left-0 w-1 h-12 bg-[#00f0ff]"></div>
-                                            <h3 className="text-lg font-bold text-[#00f0ff] mb-2">{idx + 1}. {step.title}</h3>
-                                            <p className="text-gray-400 text-base">{step.desc}</p>
-                                        </div>
-                                    ))}
-                                    {scenario.learningSteps.length === 0 && <p className="text-gray-500 italic">{t("aiBuilder.noLearningSteps")}</p>}
-                                </div>
-                            </div>
-                        </div>
+                        <InstructionsView scenario={scenario} parts={parts} locale={locale} />
                     )}
 
                     {activeTab === "purchase" && !isGenerating && (
