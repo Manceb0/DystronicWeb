@@ -18,6 +18,8 @@ Dystronic existed before Build Week. The submission work is documented in commit
 
 The recording follows one continuous flow: idea → generated plan → wiring graph → mechanical dimensions → build instructions → bill of materials → checkout access.
 
+**[Download the Devpost-ready image gallery →](artifacts/gallery)** — seven 3:2 JPGs covering the same product journey, each under 250 KB.
+
 ### What is new during Build Week
 
 - A typed project-planning contract shared by the UI, API route, and providers.
