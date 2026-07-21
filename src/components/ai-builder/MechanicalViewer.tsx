@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Canvas, type ThreeEvent } from "@react-three/fiber";
-import { Edges, Grid, OrbitControls } from "@react-three/drei";
-import { Box, Code2, Download, ExternalLink, Focus, MousePointer2, Rotate3D } from "lucide-react";
+import { Edges, Grid, Html, Line, OrbitControls } from "@react-three/drei";
+import { Box, ChevronRight, Code2, Download, ExternalLink, Focus, Layers3, Rotate3D } from "lucide-react";
 import type { Locale } from "@/i18n/types";
 
 type MechanicalPart = {
@@ -13,16 +13,50 @@ type MechanicalPart = {
   color: string;
   forgeObject: string;
   dimensions: string;
+  axes: [string, string, string];
+  category: "MCU" | "SENSOR" | "ACTUATOR" | "POWER" | "MODULE" | "3D PRINT";
 };
 
 const MECHANICAL_PARTS: MechanicalPart[] = [
-  { id: "chassis", group: "structure", label: { es: "Chasis principal", en: "Main chassis" }, color: "#38bdf8", forgeObject: "Chassis", dimensions: "142 × 84 × 4 mm" },
-  { id: "controller", group: "electronics", label: { es: "Soporte Arduino", en: "Arduino mount" }, color: "#00f0ff", forgeObject: "Arduino mount", dimensions: "42 × 34 × 8 mm" },
-  { id: "battery", group: "electronics", label: { es: "Soporte de batería", en: "Battery holder" }, color: "#facc15", forgeObject: "Battery holder", dimensions: "44 × 32 × 10 mm" },
-  { id: "driver", group: "electronics", label: { es: "Soporte del driver", en: "Motor driver mount" }, color: "#a855f7", forgeObject: "Motor driver mount", dimensions: "34 × 22 × 8 mm" },
-  { id: "sensor", group: "electronics", label: { es: "Soporte ultrasónico", en: "Ultrasonic mount" }, color: "#39ff14", forgeObject: "Ultrasonic mount", dimensions: "8 × 40 × 22 mm" },
-  { id: "wheels", group: "motion", label: { es: "Ruedas y ejes", en: "Wheels and axles" }, color: "#f97316", forgeObject: "Wheel assembly", dimensions: "Ø 36 mm" },
+  { id: "chassis", group: "structure", label: { es: "Chasis principal", en: "Main chassis" }, color: "#38bdf8", forgeObject: "Chassis", dimensions: "142 × 84 × 4 mm", axes: ["142", "84", "4"], category: "3D PRINT" },
+  { id: "controller", group: "electronics", label: { es: "Controlador principal", en: "Main controller" }, color: "#00f0ff", forgeObject: "Arduino mount", dimensions: "42 × 34 × 8 mm", axes: ["42", "34", "8"], category: "MCU" },
+  { id: "battery", group: "electronics", label: { es: "Entrada de energía", en: "System power input" }, color: "#facc15", forgeObject: "Battery holder", dimensions: "44 × 32 × 10 mm", axes: ["44", "32", "10"], category: "POWER" },
+  { id: "driver", group: "electronics", label: { es: "Driver de motores", en: "Motor driver" }, color: "#a855f7", forgeObject: "Motor driver mount", dimensions: "34 × 22 × 8 mm", axes: ["34", "22", "8"], category: "MODULE" },
+  { id: "sensor", group: "electronics", label: { es: "Sensor ultrasónico", en: "Ultrasonic sensor" }, color: "#39ff14", forgeObject: "Ultrasonic mount", dimensions: "8 × 40 × 22 mm", axes: ["8", "40", "22"], category: "SENSOR" },
+  { id: "wheels", group: "motion", label: { es: "Ruedas y ejes", en: "Wheels and axles" }, color: "#f97316", forgeObject: "Wheel assembly", dimensions: "Ø 36 mm", axes: ["36", "18", "36"], category: "ACTUATOR" },
 ];
+
+const CATEGORY_COLORS: Record<MechanicalPart["category"], string> = {
+  MCU: "#00f0ff",
+  SENSOR: "#39ff14",
+  ACTUATOR: "#ff5e00",
+  POWER: "#ffcc00",
+  MODULE: "#a855f7",
+  "3D PRINT": "#60a5fa",
+};
+
+function DimensionLabel({ position, axis, value, color }: { position: [number, number, number]; axis: string; value: string; color: string }) {
+  return (
+    <Html position={position} center style={{ pointerEvents: "none" }}>
+      <div className="whitespace-nowrap bg-[#08080b]/85 px-1.5 py-1 font-mono text-[10px] font-bold leading-none" style={{ color }}>
+        <span className="mr-1 text-white">{axis}</span>{value}
+      </div>
+    </Html>
+  );
+}
+
+function AssemblyDimensions() {
+  return (
+    <group>
+      <Line points={[[-2.8, -0.38, 2.3], [2.8, -0.38, 2.3]]} color="#e2e8f0" lineWidth={1} />
+      <Line points={[[-3.3, -0.38, -1.65], [-3.3, -0.38, 1.65]]} color="#7dd3fc" lineWidth={1} />
+      <Line points={[[-3.3, -0.35, -1.65], [-3.3, 1.05, -1.65]]} color="#fde047" lineWidth={1} />
+      <DimensionLabel position={[0, -0.28, 2.3]} axis="X" value="142 mm" color="#e2e8f0" />
+      <DimensionLabel position={[-3.3, -0.28, 0]} axis="Y" value="84 mm" color="#7dd3fc" />
+      <DimensionLabel position={[-3.3, 0.45, -1.65]} axis="Z" value="22 mm" color="#fde047" />
+    </group>
+  );
+}
 
 function SelectableBox({
   id,
@@ -104,7 +138,8 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
         structure: "Estructura",
         electronics: "Electrónica",
         motion: "Movimiento",
-        selected: "Pieza seleccionada",
+        selected: "Ensamble mecánico",
+        assembly: "Vehículo RC",
         hint: "Arrastra para rotar, usa la rueda para acercar o alejar",
         reset: "Centrar modelo",
         forgeTitle: "Flujo ForgeCAD",
@@ -120,7 +155,8 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
         structure: "Structure",
         electronics: "Electronics",
         motion: "Motion",
-        selected: "Selected part",
+        selected: "Mechanical assembly",
+        assembly: "RC vehicle",
         hint: "Drag to rotate, use the wheel to zoom",
         reset: "Center model",
         forgeTitle: "ForgeCAD workflow",
@@ -170,6 +206,7 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
         <directionalLight position={[6, 9, 5]} intensity={2.2} castShadow />
         <pointLight position={[-6, 4, -4]} color="#00f0ff" intensity={18} distance={18} />
         <RcCarAssembly selectedPart={selectedPart} onSelect={setSelectedPart} />
+        <AssemblyDimensions />
         <Grid
           position={[0, -0.5, 0]}
           args={[30, 30]}
@@ -195,16 +232,23 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
         />
       </Canvas>
 
-      <div className="absolute z-20 left-2 right-2 bottom-2 h-28 sm:left-3 sm:right-auto sm:top-14 sm:bottom-3 sm:h-auto sm:w-56 border border-white/10 bg-[#0a0a0d]/95 flex flex-col">
+      <div className="absolute z-20 left-2 right-2 bottom-2 h-28 sm:left-3 sm:right-auto sm:top-14 sm:bottom-3 sm:h-auto sm:w-64 border border-white/10 bg-[#0a0a0d]/95 flex flex-col">
         <div className="shrink-0 px-3 py-2 border-b border-white/8 flex items-center gap-2">
-          <MousePointer2 size={11} className="text-[#00f0ff]" />
+          <Layers3 size={11} className="text-[#00f0ff]" />
           <span className="text-[9px] uppercase tracking-widest text-gray-400">{copy.selected}</span>
           <span className="ml-auto h-2 w-2" style={{ backgroundColor: selected.color }} />
         </div>
-        <div className="flex-1 min-h-0 overflow-x-auto sm:overflow-y-auto p-2 flex sm:block gap-2 custom-scrollbar">
+        <div className="flex-1 min-h-0 overflow-x-auto sm:overflow-y-auto p-2 custom-scrollbar">
+          <div className="mb-2 flex items-center gap-1.5 px-1 py-1 text-[10px] font-bold text-gray-300">
+            <ChevronRight size={10} className="text-gray-600" />
+            <span className="h-2 w-2 bg-[#ffcc00]" />
+            <span>{copy.assembly}</span>
+          </div>
           {Object.entries(groupLabels).map(([group, groupLabel]) => (
-            <div key={group} className="min-w-[150px] sm:min-w-0 sm:mb-3 last:mb-0">
-              <p className="px-1 mb-1 text-[8px] font-bold uppercase tracking-widest text-gray-600">{groupLabel}</p>
+            <div key={group} className="ml-3 min-w-[150px] sm:min-w-0 sm:mb-2 last:mb-0">
+              <p className="mb-1 flex items-center gap-1 text-[8px] font-bold uppercase tracking-widest text-gray-600">
+                <ChevronRight size={9} /> {groupLabel}
+              </p>
               <div className="space-y-0.5">
                 {MECHANICAL_PARTS.filter((part) => part.group === group).map((part) => (
                   <button
@@ -215,11 +259,23 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
                   >
                     <span className="h-1.5 w-1.5 shrink-0" style={{ backgroundColor: part.color }} />
                     <span className="truncate">{part.label[locale]}</span>
+                    <span className="ml-auto text-[7px]" style={{ color: CATEGORY_COLORS[part.category] }}>{part.category}</span>
                   </button>
                 ))}
               </div>
             </div>
           ))}
+        </div>
+        <div className="hidden shrink-0 flex-wrap gap-x-2 gap-y-1 border-t border-white/10 px-3 py-2 sm:flex">
+          {(Object.keys(CATEGORY_COLORS) as MechanicalPart["category"][]).map((category) => {
+            const count = MECHANICAL_PARTS.filter((part) => part.category === category).length;
+            return count > 0 ? (
+              <span key={category} className="flex items-center gap-1 text-[7px] font-bold" style={{ color: CATEGORY_COLORS[category] }}>
+                <span className="h-1.5 w-1.5" style={{ backgroundColor: CATEGORY_COLORS[category] }} />
+                {category} ({count})
+              </span>
+            ) : null;
+          })}
         </div>
       </div>
 
@@ -232,13 +288,24 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
         <div className="p-3">
           <p className="mb-1 text-[8px] uppercase tracking-widest text-gray-600">{copy.object}</p>
           <p className="truncate text-xs font-bold text-white">{selected.forgeObject}</p>
-          <div className="mt-3 grid grid-cols-2 gap-2 border-y border-white/[0.07] py-2.5">
+          <div className="mt-3 border-y border-white/[0.07] py-2.5">
+            <p className="mb-2 text-[8px] uppercase tracking-wider text-gray-600">{copy.dimensions}</p>
+            <div className="grid grid-cols-3 gap-2">
+              {selected.axes.map((value, index) => (
+                <div key={index}>
+                  <p className="text-[8px] font-bold" style={{ color: ["#e2e8f0", "#7dd3fc", "#fde047"][index] }}>{["X", "Y", "Z"][index]}</p>
+                  <p className="mt-1 text-[10px] text-gray-300">{value} mm</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
             <div>
               <p className="text-[8px] uppercase tracking-wider text-gray-600">ID</p>
               <p className="mt-1 text-[10px] text-[#00f0ff]">{selected.id}</p>
             </div>
             <div>
-              <p className="text-[8px] uppercase tracking-wider text-gray-600">{copy.dimensions}</p>
+              <p className="text-[8px] uppercase tracking-wider text-gray-600">TOTAL</p>
               <p className="mt-1 text-[10px] text-gray-300">{selected.dimensions}</p>
             </div>
           </div>
