@@ -18,13 +18,13 @@ import { MOCK_SCENARIOS, MOCK_COMPONENTS, AIScenario, Part } from "@/lib/mock-da
 import { useAppContext } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/LanguageProvider";
-import { interpolate } from "@/i18n/helpers";
 import { localizePart, localizeScenario } from "@/i18n/content";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import PartDetailSheet from "@/components/ai-builder/PartDetailSheet";
 import ChatWelcomeFlow from "@/components/ai-builder/ChatWelcomeFlow";
 import InstructionsView from "@/components/ai-builder/InstructionsView";
 import ProjectOverview from "@/components/ai-builder/ProjectOverview";
+import PurchaseView from "@/components/ai-builder/PurchaseView";
 
 const MechanicalViewer = dynamic(() => import("@/components/ai-builder/MechanicalViewer"), {
     ssr: false,
@@ -965,34 +965,16 @@ function AIBuilderContent() {
                     )}
 
                     {activeTab === "purchase" && !isGenerating && (
-                        <div className="w-full h-full p-12 overflow-y-auto relative z-10 flex flex-col justify-center items-center">
-                            <div className="max-w-md w-full bg-[#121215] border border-white/10 p-8 text-center rounded-sm">
-                                <Zap size={48} className="text-[#ff5e00] mx-auto mb-6" />
-                                <h2 className="text-2xl font-bold text-white mb-4 uppercase tracking-widest">{t("aiBuilder.projectBundle")}</h2>
-                                <p className="text-gray-400 font-mono mb-8">{interpolate(t("aiBuilder.bundleDesc"), { count: scenario.nodes.length })}</p>
-
-                                <div className="text-4xl font-bold font-mono text-[#39ff14] mb-8">
-                                    ${scenario.overview.cost.toFixed(2)}
-                                </div>
-
-                                <Button
-                                    variant="orange"
-                                    size="lg"
-                                    className="w-full mb-4 font-mono font-bold"
-                                    onClick={() => {
-                                        // Add all to cart 
-                                        parts.forEach(p => addToCart(p, "part"));
-                                        router.push("/cart");
-                                    }}
-                                >
-                                    {t("common.addCompleteBundle")}
-                                </Button>
-
-                                <Button variant="outline" size="lg" className="w-full" onClick={() => router.push("/request")}>
-                                    {t("aiBuilder.requestSourcing")}
-                                </Button>
-                            </div>
-                        </div>
+                        <PurchaseView
+                            scenario={scenario}
+                            parts={parts}
+                            locale={locale}
+                            onAddAll={() => {
+                                parts.forEach(p => addToCart(p, "part"));
+                                router.push("/cart");
+                            }}
+                            onRequestMissing={() => router.push("/request")}
+                        />
                     )}
 
                 </div>
@@ -1061,8 +1043,8 @@ function AIBuilderContent() {
                                 ))}
                             </div>
                             <div className="shrink-0 p-4 border-t border-[#1a1a20] bg-[#0a0a0d]">
-                                <Button variant="cyan" className="w-full mb-3 text-[10px] tracking-widest" onClick={() => setActiveTab("purchase")} disabled={isGenerating}>
-                                    {t("common.viewPurchaseOptions")}
+                                <Button variant="cyan" className="w-full mb-3 text-[10px] tracking-widest" onClick={() => setActiveTab(activeTab === "purchase" ? "wiring" : "purchase")} disabled={isGenerating}>
+                                    {activeTab === "purchase" ? t("aiBuilder.backToWiring") : t("common.viewPurchaseOptions")}
                                 </Button>
                                 <span className="text-[10px] text-gray-500 text-center flex items-center justify-center gap-1"><CornerDownRight size={10} /> {t("aiBuilder.clickBoardHint")}</span>
                             </div>

@@ -289,6 +289,7 @@ export const es: TranslationDict = {
     projectBundle: "Kit del proyecto",
     bundleDesc: "Obtén los {count} componentes necesarios para este proyecto en un clic. Verificado por Dystronic AI.",
     requestSourcing: "Solicitar abastecimiento (piezas agotadas)",
+    backToWiring: "VOLVER AL CABLEADO",
     syncStore: "Sincroniza con la Tienda Dystronic",
     enrichWiring: "ENRICH WIRING",
     chatIntro: "Pregúntame sobre pines, voltaje o cómo integrarme en este proyecto.",

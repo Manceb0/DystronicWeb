@@ -289,6 +289,7 @@ export const en: TranslationDict = {
     projectBundle: "Project bundle",
     bundleDesc: "Get all {count} necessary components for this project in one click. Verified by Dystronic AI.",
     requestSourcing: "Request sourcing (out of stock parts)",
+    backToWiring: "BACK TO WIRING",
     syncStore: "Syncs with Dystronic Store",
     enrichWiring: "ENRICH WIRING",
     chatIntro: "Ask me about pins, voltage, or how to integrate me in this project.",
