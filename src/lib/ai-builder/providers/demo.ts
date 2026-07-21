@@ -6,7 +6,7 @@ export class DemoProjectPlanner implements ProjectPlannerProvider {
 
   async generatePlan(request: ProjectPlanRequest): Promise<ProjectPlanResult> {
     const base = runnableDemoScenarios[0];
-    if (!base) throw new Error("No validated offline blueprint is available.");
+    if (!base) throw new Error("No validated offline project is available.");
 
     const spanish = request.locale === "es";
     const scenario = {
@@ -24,14 +24,14 @@ export class DemoProjectPlanner implements ProjectPlannerProvider {
       mode: this.mode,
       model: null,
       notice: spanish
-        ? "Modo demo local: usa un blueprint validado y no realiza llamadas pagadas."
-        : "Local demo mode: uses a validated blueprint and makes no paid API calls.",
+        ? "Modo demo local: usa un proyecto educativo validado y no realiza llamadas pagadas."
+        : "Local demo mode: uses a validated educational project and makes no paid API calls.",
       intro: spanish
-        ? `Analicé tu idea: **${request.prompt}**. En el modo sin clave te mostraré el blueprint educativo más cercano disponible.`
-        : `I analyzed your idea: **${request.prompt}**. In keyless mode, I will show the closest available educational blueprint.`,
+        ? `Analicé tu idea: **${request.prompt}**. En el modo sin clave te mostraré el proyecto educativo más cercano disponible.`
+        : `I analyzed your idea: **${request.prompt}**. In keyless mode, I will show the closest available educational project.`,
       partsIntro: spanish
-        ? "Estos componentes pertenecen al catálogo local y forman el blueprint demostrable:"
-        : "These parts come from the local catalog and form the runnable blueprint:",
+        ? "Estos componentes pertenecen al catálogo local y forman el proyecto de demostración:"
+        : "These parts come from the local catalog and form the demonstration project:",
       completion: spanish
         ? "El board está listo. Es una demostración local claramente identificada; la misma interfaz acepta planes estructurados del proveedor OpenAI."
         : "The board is ready. This is a clearly labeled local demo; the same interface accepts structured plans from the OpenAI provider.",

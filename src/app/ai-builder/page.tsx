@@ -585,7 +585,7 @@ function AIBuilderContent() {
                                     <p className="text-xs text-gray-500 italic">{t("aiBuilder.selectComponent")}</p>
                                 )}
 
-                                {/* Chat messages — blueprint.am inspired */}
+                                {/* Component-specific assistant messages */}
                                 <div className="flex-1 min-h-[100px] space-y-3 overflow-y-auto">
                                     {activeChatMessages.length === 0 && selectedPart && (
                                         <div className="flex gap-2.5 items-start">

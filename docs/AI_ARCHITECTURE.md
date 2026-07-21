@@ -40,7 +40,7 @@ This also keeps the no-cost demo useful: judges can exercise the entire HTTP, pa
 
 ## Demo provider
 
-`DemoProjectPlanner` clones a validated local blueprint and preserves the actual user prompt. It deliberately describes the blueprint as the closest runnable offline example. It does not pretend to synthesize a novel circuit.
+`DemoProjectPlanner` clones a validated local project and preserves the actual user prompt. It deliberately describes that project as the closest runnable offline example. It does not pretend to synthesize a novel circuit.
 
 Properties:
 
@@ -87,7 +87,7 @@ Unknown stock, invented catalog IDs, and malformed graph edges are rejected befo
 
 - The OpenAI provider has not been executed in this repository because no API key or credits were available.
 - The checked-in source demonstrates the complete integration boundary but does not constitute evidence of a successful paid API call.
-- The offline provider currently has one fully validated wiring blueprint. Additional local blueprints can be added without changing the API contract.
+- The offline provider currently has one fully validated wiring project. Additional local projects can be added without changing the API contract.
 - Generated electronics guidance is educational. Builders must verify voltage, current, pinout, and component datasheets before connecting physical hardware.
 
 ## Extension points
