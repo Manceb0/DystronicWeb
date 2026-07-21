@@ -702,18 +702,23 @@ function AIBuilderContent() {
                             </span>
                         </div>
 
-                        <div ref={boardScrollRef} className="flex-1 w-full h-full relative z-10 overflow-auto px-2 pb-2 sm:px-3 sm:pb-3 min-h-0 scroll-smooth">
+                        <div
+                            ref={boardScrollRef}
+                            className="flex-1 relative z-10 overflow-auto mx-2 mb-2 sm:mx-3 sm:mb-3 min-h-0 scroll-smooth border border-t-0 border-[#00f0ff]/20 bg-[#0c0c10]"
+                            style={{
+                                backgroundImage: `
+                                    linear-gradient(to right, rgba(0,240,255,0.12) 1px, transparent 1px),
+                                    linear-gradient(to bottom, rgba(0,240,255,0.12) 1px, transparent 1px)
+                                `,
+                                backgroundSize: `${GRID * boardZoom}px ${GRID * boardZoom}px`,
+                            }}
+                        >
                         <div style={{ width: `${CANVAS_W * boardZoom}px`, height: `${CANVAS_H * boardZoom}px`, minWidth: `${CANVAS_W * boardZoom}px`, minHeight: `${CANVAS_H * boardZoom}px` }}>
                             <div
                                 ref={canvasRef}
                                 onPointerDown={handleBoardPointerDown}
-                                className="w-[1200px] h-[800px] shrink-0 relative border border-t-0 border-[#00f0ff]/20 bg-[#0c0c10] cursor-grab active:cursor-grabbing shadow-[0_0_46px_rgba(0,240,255,0.08)]"
+                                className="w-[1200px] h-[800px] shrink-0 relative cursor-grab active:cursor-grabbing"
                                 style={{
-                                    backgroundImage: `
-                                        linear-gradient(to right, rgba(0,240,255,0.12) 1px, transparent 1px),
-                                        linear-gradient(to bottom, rgba(0,240,255,0.12) 1px, transparent 1px)
-                                    `,
-                                    backgroundSize: `${GRID}px ${GRID}px`,
                                     transform: `scale(${boardZoom})`,
                                     transformOrigin: "top left",
                                 }}
