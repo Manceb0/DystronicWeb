@@ -24,6 +24,7 @@ import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import PartDetailSheet from "@/components/ai-builder/PartDetailSheet";
 import ChatWelcomeFlow from "@/components/ai-builder/ChatWelcomeFlow";
 import InstructionsView from "@/components/ai-builder/InstructionsView";
+import ProjectOverview from "@/components/ai-builder/ProjectOverview";
 
 const MechanicalViewer = dynamic(() => import("@/components/ai-builder/MechanicalViewer"), {
     ssr: false,
@@ -956,27 +957,7 @@ function AIBuilderContent() {
                     )}
 
                     {activeTab === "overview" && !isGenerating && (
-                        <div className="w-full h-full p-12 overflow-y-auto relative z-10">
-                            <div className="max-w-3xl">
-                                <h2 className="text-3xl font-bold font-sans text-white mb-6 uppercase tracking-widest">{scenario.projectName}</h2>
-                                <div className="grid grid-cols-3 gap-6 mb-12">
-                                    <div className="bg-[#121215] border border-white/5 p-6 rounded-sm">
-                                        <p className="text-[#00f0ff] uppercase text-[10px] font-bold tracking-widest mb-1">{t("aiBuilder.difficulty")}</p>
-                                        <p className="text-xl font-bold text-white">{scenario.overview.level}</p>
-                                    </div>
-                                    <div className="bg-[#121215] border border-white/5 p-6 rounded-sm">
-                                        <p className="text-[#ff5e00] uppercase text-[10px] font-bold tracking-widest mb-1">{t("aiBuilder.estTime")}</p>
-                                        <p className="text-xl font-bold text-white">{scenario.overview.time}</p>
-                                    </div>
-                                    <div className="bg-[#121215] border border-white/5 p-6 rounded-sm">
-                                        <p className="text-[#39ff14] uppercase text-[10px] font-bold tracking-widest mb-1">{t("aiBuilder.estCost")}</p>
-                                        <p className="text-xl font-bold text-white">${scenario.overview.cost.toFixed(2)}</p>
-                                    </div>
-                                </div>
-                                <h3 className="text-lg font-bold text-[#00f0ff] uppercase tracking-widest mb-4">{t("aiBuilder.objective")}</h3>
-                                <p className="text-gray-400 text-lg leading-relaxed mb-8">{scenario.overview.description}</p>
-                            </div>
-                        </div>
+                        <ProjectOverview scenario={scenario} parts={parts} locale={locale} />
                     )}
 
                     {activeTab === "learn" && !isGenerating && (
