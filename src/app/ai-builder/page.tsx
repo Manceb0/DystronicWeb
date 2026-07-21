@@ -11,7 +11,7 @@ import {
     ArrowLeft, Edit3, MessageSquare, Download,
     Cpu, Zap, Radio, Activity, LayoutTemplate, MonitorSmartphone, Share2, CornerDownRight, Bot, List, Send,
     ZoomIn, ZoomOut, RotateCcw, ShoppingCart, ExternalLink, X, Package, BadgeCheck, ChevronDown,
-    ScanLine, BookOpen, ShoppingBag, Workflow, Globe, Clock, Box
+    ScanLine, BookOpen, ShoppingBag, Workflow, Globe, Clock, Box, PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 import { Suspense } from "react";
 import { MOCK_SCENARIOS, MOCK_COMPONENTS, AIScenario, Part } from "@/lib/mock-data";
@@ -54,6 +54,7 @@ function AIBuilderContent() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [inputValue, setInputValue] = useState("");
     const [leftPanelView, setLeftPanelView] = useState<LeftPanelView>("plan");
+    const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
     const [selectedPartId, setSelectedPartId] = useState<string | null>(null);
     const [chatByPart, setChatByPart] = useState<Record<string, ChatMessage[]>>({});
     const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
@@ -500,7 +501,21 @@ function AIBuilderContent() {
             <div ref={builderShellRef} className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0 custom-scrollbar">
 
                 {/* === LEFT COLUMN: PLAN / COMPONENT CHAT === */}
-                <div className="builder-side-panel order-2 lg:order-1 w-full lg:w-[380px] shrink-0 border-t lg:border-t-0 lg:border-r border-[#1a1a20] flex flex-col bg-[#050507] min-h-[420px] max-h-[52dvh] lg:min-h-0 lg:max-h-none">
+                <div className={`builder-side-panel order-2 lg:order-1 w-full ${isLeftPanelCollapsed ? "lg:w-11" : "lg:w-[380px]"} shrink-0 border-t lg:border-t-0 lg:border-r border-[#1a1a20] flex flex-col bg-[#050507] min-h-[420px] max-h-[52dvh] lg:min-h-0 lg:max-h-none overflow-hidden transition-[width] duration-200`}>
+
+                    {isLeftPanelCollapsed ? (
+                        <button
+                            type="button"
+                            onClick={() => setIsLeftPanelCollapsed(false)}
+                            className="hidden lg:flex h-full w-full flex-col items-center gap-3 pt-3 text-gray-500 hover:bg-white/[0.04] hover:text-[#00f0ff] transition-colors"
+                            title={locale === "es" ? "Abrir Plan y Chat" : "Open Plan and Chat"}
+                            aria-label={locale === "es" ? "Abrir panel Plan y Chat" : "Open Plan and Chat panel"}
+                        >
+                            <PanelLeftOpen size={15} />
+                            <span className="text-[8px] font-bold uppercase tracking-widest [writing-mode:vertical-rl]">{t("aiBuilder.plan")} / {t("aiBuilder.chat")}</span>
+                        </button>
+                    ) : (
+                    <>
 
                     <div className="shrink-0 border-b border-[#1a1a20]">
                         <div className="flex">
@@ -522,6 +537,15 @@ function AIBuilderContent() {
                                 className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 flex items-center justify-center gap-1.5 ${leftPanelView === "chat" ? "border-[#00f0ff] text-[#00f0ff] bg-[#00f0ff]/5" : "border-transparent text-gray-500 hover:text-gray-300"}`}
                             >
                                 <MessageSquare size={11} /> {t("aiBuilder.chat")}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsLeftPanelCollapsed(true)}
+                                className="hidden lg:grid w-10 shrink-0 place-items-center border-l border-[#1a1a20] text-gray-600 hover:bg-white/5 hover:text-[#00f0ff] transition-colors"
+                                title={locale === "es" ? "Colapsar panel" : "Collapse panel"}
+                                aria-label={locale === "es" ? "Colapsar panel Plan y Chat" : "Collapse Plan and Chat panel"}
+                            >
+                                <PanelLeftClose size={14} />
                             </button>
                         </div>
                     </div>
@@ -677,6 +701,8 @@ function AIBuilderContent() {
                             </button>
                         </div>
                     </div>
+                    </>
+                    )}
                 </div>
 
                 {/* === CENTER COLUMN: DYNAMIC CANVAS === */}
