@@ -9,7 +9,9 @@ import {
     Bot, Send, ArrowRight, Sparkles, Workflow, GraduationCap, PackageOpen, Cpu,
     Cog, Radio, BookOpen, ShoppingCart, ChevronRight, CheckCircle2,
 } from "lucide-react";
-import { MOCK_SCENARIOS, MOCK_KITS, MOCK_COURSES, MOCK_COMPONENTS, Part } from "@/lib/mock-data";
+import { MOCK_KITS, MOCK_COURSES, MOCK_COMPONENTS, AIScenario, Part } from "@/lib/mock-data";
+import type { AIProviderMode, ProjectPlanResult } from "@/lib/ai-builder/contracts";
+import { useTranslation } from "@/i18n/LanguageProvider";
 
 gsap.registerPlugin(useGSAP);
 
@@ -19,14 +21,15 @@ type FlowMsg =
     | { id: string; role: "user"; content: string }
     | { id: string; role: "assistant"; type: "text"; content: string; done?: boolean }
     | { id: string; role: "assistant"; type: "thinking" }
-    | { id: string; role: "assistant"; type: "scenario-card"; scenarioId: string; done?: boolean }
+    | { id: string; role: "assistant"; type: "provider-note"; mode: AIProviderMode; label: string }
+    | { id: string; role: "assistant"; type: "scenario-card"; scenario: AIScenario; done?: boolean }
     | { id: string; role: "assistant"; type: "kits-card"; kitIds: string[]; done?: boolean }
     | { id: string; role: "assistant"; type: "courses-card"; courseIds: string[]; done?: boolean }
     | { id: string; role: "assistant"; type: "parts-card"; parts: { partId: string; qty: number; reason?: string }[]; done?: boolean }
-    | { id: string; role: "assistant"; type: "open-builder-cta"; scenarioId: string; done?: boolean };
+    | { id: string; role: "assistant"; type: "open-builder-cta"; scenario: AIScenario; done?: boolean };
 
 type Intent =
-    | { kind: "project"; scenarioId: string }
+    | { kind: "project"; scenario: AIScenario; plan: ProjectPlanResult }
     | { kind: "course"; courseIds: string[] }
     | { kind: "kit"; kitIds: string[] }
     | { kind: "parts"; partIds: string[] }
@@ -41,10 +44,18 @@ const SUGGESTIONS: { label: string; prompt: string; icon: React.ReactNode; accen
     { label: "Comprar sensores",    prompt: "Necesito sensores para detección de obstáculos",     icon: <Cpu size={14} />,           accent: "#00f0ff" },
 ];
 
-// ─── Detect what the user wants ─────────────────────────────
-function detectIntent(prompt: string): Intent {
-    void prompt;
-    return { kind: "project", scenarioId: "sc-rc-car" };
+// Route every free-form project request through the same server-side provider boundary.
+async function detectIntent(prompt: string, locale: "es" | "en"): Promise<Intent> {
+    const response = await fetch("/api/ai-builder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, locale }),
+    });
+    const payload = (await response.json()) as ProjectPlanResult | { error: string };
+    if (!response.ok || "error" in payload) {
+        throw new Error("error" in payload ? payload.error : "No se pudo generar el plan.");
+    }
+    return { kind: "project", scenario: payload.scenario, plan: payload };
 }
 
 // ─── Typewriter hook ─────────────────────────────────────────
@@ -80,11 +91,12 @@ const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
 // ─── MAIN COMPONENT ─────────────────────────────────────────
 type Props = {
-    onOpenScenario: (scenarioId: string) => void;
+    onOpenScenario: (scenario: AIScenario) => void;
     onComplete?: () => void;
 };
 
 export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
+    const { locale } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const threadRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -131,7 +143,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
         setBusy(true);
         setInput("");
 
-        const userMsg: FlowMsg = { id: `u-${Date.now()}`, role: "user", content: DEMO_RC_PROMPT };
+        const userMsg: FlowMsg = { id: `u-${Date.now()}`, role: "user", content: prompt };
         setThread(t => [...t, userMsg]);
         if (stage === "welcome") setStage("chat");
 
@@ -141,32 +153,54 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
 
         await sleep(1100);
 
-        const intent = detectIntent(DEMO_RC_PROMPT);
+        let intent: Intent;
+        try {
+            intent = await detectIntent(prompt, locale);
+        } catch (error) {
+            setThread(t => [
+                ...t.filter(m => m.id !== thinkingId),
+                {
+                    id: `a-error-${Date.now()}`,
+                    role: "assistant",
+                    type: "text",
+                    content: error instanceof Error ? error.message : "No se pudo generar el plan.",
+                    done: true,
+                },
+            ]);
+            setBusy(false);
+            return;
+        }
 
         // Remove thinking, push intro text
         setThread(t => t.filter(m => m.id !== thinkingId));
 
         if (intent.kind === "project") {
-            const scenario = MOCK_SCENARIOS.find(s => s.id === intent.scenarioId);
-            const sceneName = scenario?.projectName ?? "tu proyecto";
+            const scenario = intent.scenario;
+            setThread(t => [...t, {
+                id: `a-provider-${Date.now()}`,
+                role: "assistant",
+                type: "provider-note",
+                mode: intent.plan.mode,
+                label: intent.plan.notice,
+            }]);
 
             await pushTyped({
                 id: `a-text-${Date.now()}`,
                 role: "assistant", type: "text",
-                content: `Perfecto. Voy a diseñar **${sceneName}** paso a paso. Primero analizo qué componentes necesitas y cómo se conectan entre sí.`,
+                content: intent.plan.intro,
             });
 
             await sleep(400);
 
             // Scenario card
-            setThread(t => [...t, { id: `a-scn-${Date.now()}`, role: "assistant", type: "scenario-card", scenarioId: intent.scenarioId, done: false }]);
+            setThread(t => [...t, { id: `a-scn-${Date.now()}`, role: "assistant", type: "scenario-card", scenario, done: false }]);
             await sleep(900);
             markDone();
 
             await pushTyped({
                 id: `a-text2-${Date.now()}`,
                 role: "assistant", type: "text",
-                content: `Estos son los componentes principales que necesitas, todos en stock en Dystronic:`,
+                content: intent.plan.partsIntro,
             });
 
             // Parts card from scenario
@@ -179,10 +213,10 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
             await pushTyped({
                 id: `a-text3-${Date.now()}`,
                 role: "assistant", type: "text",
-                content: `Tu diagrama de cableado interactivo está listo. Puedes editar, mover componentes, ver detalles y comprar el kit completo.`,
+                content: intent.plan.completion,
             });
 
-            setThread(t => [...t, { id: `a-cta-${Date.now()}`, role: "assistant", type: "open-builder-cta", scenarioId: intent.scenarioId, done: false }]);
+            setThread(t => [...t, { id: `a-cta-${Date.now()}`, role: "assistant", type: "open-builder-cta", scenario, done: false }]);
             await sleep(500);
             markDone();
 
@@ -226,7 +260,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
 
         setBusy(false);
         setTimeout(() => inputRef.current?.focus(), 100);
-    }, [input, busy, stage, pushTyped, markDone]);
+    }, [input, busy, stage, pushTyped, markDone, locale]);
 
     return (
         <div ref={containerRef} className="absolute inset-0 bg-[#050507] flex flex-col z-50 overflow-hidden font-mono">
@@ -421,7 +455,7 @@ function ThreadItem({
     msg, onOpenScenario,
 }: {
     msg: FlowMsg;
-    onOpenScenario: (scenarioId: string) => void;
+    onOpenScenario: (scenario: AIScenario) => void;
 }) {
     if (msg.role === "user") {
         return (
@@ -438,7 +472,9 @@ function ThreadItem({
 
     if (msg.type === "text") return <TextBubble fullText={msg.content} done={msg.done ?? false} />;
 
-    if (msg.type === "scenario-card") return <ScenarioCard scenarioId={msg.scenarioId} done={msg.done ?? false} />;
+    if (msg.type === "provider-note") return <ProviderNote mode={msg.mode} label={msg.label} />;
+
+    if (msg.type === "scenario-card") return <ScenarioCard scenario={msg.scenario} done={msg.done ?? false} />;
 
     if (msg.type === "parts-card") return <PartsCard parts={msg.parts} done={msg.done ?? false} />;
 
@@ -447,7 +483,7 @@ function ThreadItem({
     if (msg.type === "courses-card") return <CoursesCard courseIds={msg.courseIds} done={msg.done ?? false} />;
 
     if (msg.type === "open-builder-cta") return (
-        <OpenBuilderCTA scenarioId={msg.scenarioId} onOpen={() => onOpenScenario(msg.scenarioId)} />
+        <OpenBuilderCTA scenario={msg.scenario} onOpen={() => onOpenScenario(msg.scenario)} />
     );
 
     return null;
@@ -491,6 +527,23 @@ function ThinkingBubble() {
     );
 }
 
+function ProviderNote({ mode, label }: { mode: AIProviderMode; label: string }) {
+    const isDemo = mode === "demo";
+    return (
+        <AvatarBubble accent={isDemo ? "#f59e0b" : "#39ff14"}>
+            <div className="max-w-[90%] border border-white/10 bg-white/[0.025] px-3 py-2 flex items-start gap-2">
+                <span className={`mt-1 h-1.5 w-1.5 rounded-full shrink-0 ${isDemo ? "bg-[#f59e0b]" : "bg-[#39ff14]"}`} />
+                <p className="text-[10px] leading-relaxed text-white/45">
+                    <span className="uppercase tracking-widest text-white/70 mr-2">
+                        {isDemo ? "Demo provider" : "OpenAI provider"}
+                    </span>
+                    {label}
+                </p>
+            </div>
+        </AvatarBubble>
+    );
+}
+
 function TextBubble({ fullText, done }: { fullText: string; done: boolean }) {
     const displayed = useTypewriter(done ? fullText : fullText, 18);
     // Bold via **
@@ -511,9 +564,7 @@ function TextBubble({ fullText, done }: { fullText: string; done: boolean }) {
     );
 }
 
-function ScenarioCard({ scenarioId, done }: { scenarioId: string; done: boolean }) {
-    const scenario = MOCK_SCENARIOS.find(s => s.id === scenarioId);
-    if (!scenario) return null;
+function ScenarioCard({ scenario, done }: { scenario: AIScenario; done: boolean }) {
     return (
         <AvatarBubble>
             <div
@@ -681,8 +732,7 @@ function CoursesCard({ courseIds, done }: { courseIds: string[]; done: boolean }
     );
 }
 
-function OpenBuilderCTA({ scenarioId, onOpen }: { scenarioId: string; onOpen: () => void }) {
-    const scenario = MOCK_SCENARIOS.find(s => s.id === scenarioId);
+function OpenBuilderCTA({ scenario, onOpen }: { scenario: AIScenario; onOpen: () => void }) {
     return (
         <AvatarBubble>
             <button

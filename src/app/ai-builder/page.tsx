@@ -13,7 +13,7 @@ import {
     ScanLine, BookOpen, ShoppingBag, Workflow, Globe, Clock
 } from "lucide-react";
 import { Suspense } from "react";
-import { MOCK_SCENARIOS, MOCK_COMPONENTS, Part } from "@/lib/mock-data";
+import { MOCK_SCENARIOS, MOCK_COMPONENTS, AIScenario, Part } from "@/lib/mock-data";
 import { useAppContext } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/LanguageProvider";
@@ -44,6 +44,7 @@ function AIBuilderContent() {
     const [hasStartedBuilder, setHasStartedBuilder] = useState(false);
     const [activeTab, setActiveTab] = useState<ViewMode>("wiring");
     const [projectId, setProjectId] = useState<string>("sc-rc-car"); // Default RC Car
+    const [generatedScenario, setGeneratedScenario] = useState<AIScenario | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [inputValue, setInputValue] = useState("");
     const [leftPanelView, setLeftPanelView] = useState<LeftPanelView>("plan");
@@ -68,7 +69,10 @@ function AIBuilderContent() {
         moved: boolean;
     } | null>(null);
 
-    const baseScenario = MOCK_SCENARIOS.find(s => s.id === projectId) || MOCK_SCENARIOS[0];
+    const baseScenario =
+        generatedScenario?.id === projectId
+            ? generatedScenario
+            : MOCK_SCENARIOS.find(s => s.id === projectId) || MOCK_SCENARIOS[0];
     const scenario = useMemo(
         () => localizeScenario(baseScenario, locale),
         [baseScenario, locale]
@@ -413,8 +417,9 @@ function AIBuilderContent() {
             {/* Welcome chat flow — shown until user picks a project */}
             {!hasStartedBuilder && (
                 <ChatWelcomeFlow
-                    onOpenScenario={(sid) => {
-                        setProjectId(sid);
+                    onOpenScenario={(nextScenario) => {
+                        setGeneratedScenario(nextScenario);
+                        setProjectId(nextScenario.id);
                         setHasStartedBuilder(true);
                     }}
                 />

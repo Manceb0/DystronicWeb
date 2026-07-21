@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dystronic
 
-## Getting Started
+Dystronic is an education-first electronics workspace that connects a local parts catalog, guided projects, courses, and an interactive wiring board. A learner can describe an idea, review a grounded system plan, inspect the parts, and move from concept to a buildable prototype.
 
-First, run the development server:
+## OpenAI Build Week 2026
+
+- **Track:** Education
+- **Build Week branch:** `codex/build-week-ai-architecture`
+
+Dystronic existed before Build Week. The work added during the submission period is intentionally isolated in the branch above and documented in commit history. The Build Week extension turns the previously hard-coded AI Builder demonstration into a provider-based, catalog-grounded planning pipeline.
+
+### What is new during Build Week
+
+- A typed project-planning contract shared by the UI, API route, and providers.
+- A keyless local demo provider that works deterministically and makes no paid API calls.
+- An optional GPT-5.6 provider built on the OpenAI Responses API.
+- Strict structured output for project graphs, learning steps, parts, and connections.
+- Server-side validation that rejects unknown catalog parts, duplicate nodes, and invalid graph edges.
+- A real `/api/ai-builder` boundary with input validation and server-only secret handling.
+- Dynamic scenarios: the interactive board now consumes the provider result instead of always replacing the user's request with a fixed RC-car prompt.
+- Visible provider disclosure in the product so judges can distinguish offline demo output from API-backed output.
+
+See [Architecture](docs/AI_ARCHITECTURE.md) for the full request flow and design decisions.
+
+## Run the judge-friendly demo
+
+The default path requires no account, API key, or paid service.
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000/ai-builder`, enter an idea, and follow the generated plan into the interactive board. With the default environment file, the UI clearly labels the result as `Demo provider`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Optional OpenAI provider
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This source path is included for architectural review. It is disabled by default and was not executed during development because the project owner does not have API credits.
 
-## Learn More
+```dotenv
+DYSTRONIC_AI_PROVIDER=openai
+OPENAI_API_KEY=your_server_side_key
+OPENAI_MODEL=gpt-5.6-sol
+```
 
-To learn more about Next.js, take a look at the following resources:
+Restart the development server after changing environment variables. `OPENAI_API_KEY` must never use a `NEXT_PUBLIC_` prefix. If OpenAI mode is selected without a key, Dystronic safely falls back to the local provider and discloses that fallback in the response.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## How Codex contributed
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Codex was used as the implementation partner for the Build Week extension:
 
-## Deploy on Vercel
+- Audited the existing product and identified that user prompts were being replaced by a fixed demo prompt.
+- Read the repository's bundled Next.js 16.2 documentation before introducing a Route Handler and environment-variable boundary.
+- Consulted current OpenAI documentation for GPT-5.6, the Responses API, and Structured Outputs.
+- Designed the provider interface, JSON Schema, catalog grounding, validation boundary, and safe demo fallback.
+- Connected the existing UI to the new pipeline while preserving the visual product experience.
+- Ran TypeScript, production build, and local endpoint checks.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Product decisions remained human-owned: Dystronic's educational focus, the no-cost default, explicit disclosure of demo behavior, and the decision not to claim an API call that was never made.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Technical overview
+
+- Next.js 16.2 App Router
+- React 19 and TypeScript
+- GSAP and Motion for interaction
+- Tailwind CSS 4
+- OpenAI Responses API integration via server-side native `fetch` (optional)
+- JSON Schema Structured Outputs and application-level graph validation
+
+## Verification
+
+```bash
+npx tsc --noEmit
+npm run build
+```
+
+The production build succeeds. The repository also contains pre-existing ESLint debt in legacy animation and helper files; the new AI architecture files pass their scoped lint check. This limitation is documented rather than hidden.
+
+## Repository map
+
+```text
+src/app/api/ai-builder/route.ts       Validated server boundary
+src/lib/ai-builder/contracts.ts       Shared request/result/provider contracts
+src/lib/ai-builder/planner.ts         Provider selection and safe fallback
+src/lib/ai-builder/providers/demo.ts  Free deterministic provider
+src/lib/ai-builder/providers/openai.ts Optional GPT-5.6 Responses provider
+src/lib/ai-builder/prompt.ts          Catalog-grounded prompt and JSON Schema
+src/lib/ai-builder/validate-plan.ts   Untrusted model-output validation
+```
+
+## Submission notes
+
+- The demonstration video must be public on YouTube, include voice narration, and remain under three minutes.
+- The Devpost form also requires the `/feedback` Codex Session ID from the primary build task.
+- If the repository remains private, grant access to the judge accounts specified in the official rules.
+
+## License
+
+Released under the [MIT License](LICENSE).
