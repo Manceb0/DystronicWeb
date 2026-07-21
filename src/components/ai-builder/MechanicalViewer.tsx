@@ -19,11 +19,14 @@ type MechanicalPart = {
 
 const MECHANICAL_PARTS: MechanicalPart[] = [
   { id: "chassis", group: "structure", label: { es: "Chasis principal", en: "Main chassis" }, color: "#38bdf8", forgeObject: "Chassis", dimensions: "142 × 84 × 4 mm", axes: ["142", "84", "4"], category: "3D PRINT" },
-  { id: "controller", group: "electronics", label: { es: "Controlador principal", en: "Main controller" }, color: "#00f0ff", forgeObject: "Arduino mount", dimensions: "42 × 34 × 8 mm", axes: ["42", "34", "8"], category: "MCU" },
-  { id: "battery", group: "electronics", label: { es: "Entrada de energía", en: "System power input" }, color: "#facc15", forgeObject: "Battery holder", dimensions: "44 × 32 × 10 mm", axes: ["44", "32", "10"], category: "POWER" },
-  { id: "driver", group: "electronics", label: { es: "Driver de motores", en: "Motor driver" }, color: "#a855f7", forgeObject: "Motor driver mount", dimensions: "34 × 22 × 8 mm", axes: ["34", "22", "8"], category: "MODULE" },
-  { id: "sensor", group: "electronics", label: { es: "Sensor ultrasónico", en: "Ultrasonic sensor" }, color: "#39ff14", forgeObject: "Ultrasonic mount", dimensions: "8 × 40 × 22 mm", axes: ["8", "40", "22"], category: "SENSOR" },
-  { id: "wheels", group: "motion", label: { es: "Ruedas y ejes", en: "Wheels and axles" }, color: "#f97316", forgeObject: "Wheel assembly", dimensions: "Ø 36 mm", axes: ["36", "18", "36"], category: "ACTUATOR" },
+  { id: "controller", group: "electronics", label: { es: "Arduino Uno R3", en: "Arduino Uno R3" }, color: "#00f0ff", forgeObject: "Arduino Uno mount", dimensions: "69 × 54 × 15 mm", axes: ["69", "54", "15"], category: "MCU" },
+  { id: "battery", group: "electronics", label: { es: "Batería Li-ion 18650", en: "18650 Li-ion battery" }, color: "#facc15", forgeObject: "18650 battery holder", dimensions: "65 × 36 × 20 mm", axes: ["65", "36", "20"], category: "POWER" },
+  { id: "regulator", group: "electronics", label: { es: "Regulador LM2596", en: "LM2596 regulator" }, color: "#a855f7", forgeObject: "LM2596 mount", dimensions: "43 × 21 × 14 mm", axes: ["43", "21", "14"], category: "MODULE" },
+  { id: "driver", group: "electronics", label: { es: "Driver L298N", en: "L298N motor driver" }, color: "#c026d3", forgeObject: "L298N mount", dimensions: "44 × 44 × 30 mm", axes: ["44", "44", "30"], category: "MODULE" },
+  { id: "sensor", group: "electronics", label: { es: "Sensor HC-SR04", en: "HC-SR04 sensor" }, color: "#39ff14", forgeObject: "HC-SR04 mount", dimensions: "45 × 20 × 16 mm", axes: ["45", "20", "16"], category: "SENSOR" },
+  { id: "rightMotor", group: "motion", label: { es: "Motor DC derecho", en: "Right DC motor" }, color: "#f97316", forgeObject: "Right motor bracket", dimensions: "70 × 25 × 25 mm", axes: ["70", "25", "25"], category: "ACTUATOR" },
+  { id: "leftMotor", group: "motion", label: { es: "Motor DC izquierdo", en: "Left DC motor" }, color: "#fb923c", forgeObject: "Left motor bracket", dimensions: "70 × 25 × 25 mm", axes: ["70", "25", "25"], category: "ACTUATOR" },
+  { id: "servo", group: "motion", label: { es: "Servo SG90", en: "SG90 steering servo" }, color: "#ff5e00", forgeObject: "SG90 servo bracket", dimensions: "23 × 12 × 29 mm", axes: ["23", "12", "29"], category: "ACTUATOR" },
 ];
 
 const CATEGORY_COLORS: Record<MechanicalPart["category"], string> = {
@@ -95,34 +98,68 @@ function SelectableBox({
   );
 }
 
-function Wheel({ position, selected, onSelect }: { position: [number, number, number]; selected: boolean; onSelect: (id: string) => void }) {
-  return (
-    <mesh
-      position={position}
-      rotation={[Math.PI / 2, 0, 0]}
-      onClick={(event) => { event.stopPropagation(); onSelect("wheels"); }}
-      castShadow
-    >
-      <cylinderGeometry args={[0.72, 0.72, 0.42, 24]} />
-      <meshStandardMaterial color={selected ? "#f97316" : "#17171b"} roughness={0.72} metalness={0.1} />
-      <Edges color={selected ? "#fdba74" : "#52525b"} />
-    </mesh>
-  );
-}
-
 function RcCarAssembly({ selectedPart, onSelect }: { selectedPart: string; onSelect: (id: string) => void }) {
+  const select = (id: string) => (event: ThreeEvent<MouseEvent>) => {
+    event.stopPropagation();
+    onSelect(id);
+  };
+  const glow = (id: string, color: string) => ({
+    color,
+    emissive: selectedPart === id ? color : "#000000",
+    emissiveIntensity: selectedPart === id ? 0.3 : 0,
+  });
+
   return (
     <group rotation={[0, -0.16, 0]}>
       <SelectableBox id="chassis" selected={selectedPart === "chassis"} color="#38bdf8" position={[0, 0, 0]} size={[5.6, 0.34, 3.3]} onSelect={onSelect} />
-      <SelectableBox id="controller" selected={selectedPart === "controller"} color="#00f0ff" position={[-1.1, 0.48, 0.15]} size={[1.55, 0.3, 1.25]} onSelect={onSelect} />
-      <SelectableBox id="battery" selected={selectedPart === "battery"} color="#facc15" position={[1.15, 0.52, 0.2]} size={[1.55, 0.42, 1.15]} onSelect={onSelect} />
-      <SelectableBox id="driver" selected={selectedPart === "driver"} color="#a855f7" position={[0.05, 0.48, -1]} size={[1.25, 0.3, 0.75]} onSelect={onSelect} />
-      <SelectableBox id="sensor" selected={selectedPart === "sensor"} color="#39ff14" position={[-2.35, 0.58, 0]} size={[0.34, 0.85, 1.35]} onSelect={onSelect} />
 
-      <Wheel position={[-1.85, -0.14, 1.82]} selected={selectedPart === "wheels"} onSelect={onSelect} />
-      <Wheel position={[1.85, -0.14, 1.82]} selected={selectedPart === "wheels"} onSelect={onSelect} />
-      <Wheel position={[-1.85, -0.14, -1.82]} selected={selectedPart === "wheels"} onSelect={onSelect} />
-      <Wheel position={[1.85, -0.14, -1.82]} selected={selectedPart === "wheels"} onSelect={onSelect} />
+      {/* Arduino Uno: PCB, MCU, USB socket and headers. */}
+      <group position={[-0.95, 0.38, 0.35]} onClick={select("controller")}>
+        <mesh><boxGeometry args={[1.65, 0.12, 1.25]} /><meshStandardMaterial {...glow("controller", "#008a9b")} /><Edges color="#00f0ff" /></mesh>
+        <mesh position={[0.12, 0.13, 0]}><boxGeometry args={[0.55, 0.15, 0.28]} /><meshStandardMaterial color="#111827" /></mesh>
+        <mesh position={[-0.68, 0.16, 0.35]}><boxGeometry args={[0.3, 0.22, 0.45]} /><meshStandardMaterial color="#cbd5e1" metalness={0.8} /></mesh>
+        {[-0.45, -0.15, 0.15, 0.45].map((z) => <mesh key={z} position={[0.72, 0.16, z]}><boxGeometry args={[0.12, 0.2, 0.12]} /><meshStandardMaterial color="#111111" /></mesh>)}
+      </group>
+
+      {/* Two visible 18650 cells in their holder. */}
+      <group position={[1.25, 0.55, 0.25]} onClick={select("battery")}>
+        {[-0.28, 0.28].map((z) => <mesh key={z} position={[0, 0, z]} rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.2, 0.2, 1.55, 24]} /><meshStandardMaterial {...glow("battery", "#d4a800")} /><Edges color="#fde047" /></mesh>)}
+        <mesh position={[0, -0.2, 0]}><boxGeometry args={[1.7, 0.12, 0.75]} /><meshStandardMaterial color="#171717" /></mesh>
+      </group>
+
+      {/* LM2596 buck converter with coil and terminal blocks. */}
+      <group position={[0.55, 0.38, -1.15]} onClick={select("regulator")}>
+        <mesh><boxGeometry args={[1.05, 0.1, 0.58]} /><meshStandardMaterial {...glow("regulator", "#1d4ed8")} /><Edges color="#60a5fa" /></mesh>
+        <mesh position={[0, 0.16, 0]}><cylinderGeometry args={[0.18, 0.18, 0.2, 18]} /><meshStandardMaterial color="#64748b" metalness={0.7} /></mesh>
+        {[-0.43, 0.43].map((x) => <mesh key={x} position={[x, 0.14, 0]}><boxGeometry args={[0.2, 0.2, 0.42]} /><meshStandardMaterial color="#2563eb" /></mesh>)}
+      </group>
+
+      {/* L298N board with its characteristic heat sink. */}
+      <group position={[-0.55, 0.4, -1.08]} onClick={select("driver")}>
+        <mesh><boxGeometry args={[0.9, 0.1, 0.78]} /><meshStandardMaterial {...glow("driver", "#b91c1c")} /><Edges color="#f87171" /></mesh>
+        {[-0.16, 0, 0.16].map((x) => <mesh key={x} position={[x, 0.28, 0]}><boxGeometry args={[0.08, 0.45, 0.42]} /><meshStandardMaterial color="#9ca3af" metalness={0.85} /></mesh>)}
+      </group>
+
+      {/* HC-SR04 front sensor with two ultrasonic transducers. */}
+      <group position={[-2.55, 0.64, 0]} rotation={[0, 0, Math.PI / 2]} onClick={select("sensor")}>
+        <mesh><boxGeometry args={[0.12, 1.1, 0.5]} /><meshStandardMaterial {...glow("sensor", "#15803d")} /><Edges color="#4ade80" /></mesh>
+        {[-0.28, 0.28].map((y) => <mesh key={y} position={[-0.13, y, 0]} rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.17, 0.17, 0.18, 24]} /><meshStandardMaterial color="#d1d5db" metalness={0.8} /><Edges color="#ffffff" /></mesh>)}
+      </group>
+
+      {/* DC gear motors and drive wheels. */}
+      {([{ id: "rightMotor", z: 1.62, color: "#f97316" }, { id: "leftMotor", z: -1.62, color: "#fb923c" }] as const).map((motor) => (
+        <group key={motor.id} position={[1.35, 0, motor.z]} onClick={select(motor.id)}>
+          <mesh rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.3, 0.3, 0.85, 20]} /><meshStandardMaterial {...glow(motor.id, "#d1a054")} /><Edges color={motor.color} /></mesh>
+          <mesh position={[0, -0.02, motor.z > 0 ? 0.38 : -0.38]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.7, 0.7, 0.3, 24]} /><meshStandardMaterial color={selectedPart === motor.id ? motor.color : "#151519"} roughness={0.8} /><Edges color={selectedPart === motor.id ? "#ffffff" : "#52525b"} /></mesh>
+        </group>
+      ))}
+
+      {/* SG90 steering servo and horn. */}
+      <group position={[-1.55, 0.45, -0.65]} onClick={select("servo")}>
+        <mesh><boxGeometry args={[0.55, 0.55, 0.32]} /><meshStandardMaterial {...glow("servo", "#2563eb")} /><Edges color="#60a5fa" /></mesh>
+        <mesh position={[0, 0.34, 0]}><cylinderGeometry args={[0.09, 0.09, 0.14, 16]} /><meshStandardMaterial color="#f8fafc" /></mesh>
+        <mesh position={[0, 0.43, 0]}><boxGeometry args={[0.75, 0.06, 0.1]} /><meshStandardMaterial color="#f8fafc" /></mesh>
+      </group>
     </group>
   );
 }
