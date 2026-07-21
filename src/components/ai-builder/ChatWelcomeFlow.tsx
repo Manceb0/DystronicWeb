@@ -7,11 +7,13 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import {
     Bot, Send, ArrowRight, Sparkles, Workflow, GraduationCap, PackageOpen, Cpu,
-    Cog, Radio, BookOpen, ShoppingCart, ChevronRight, CheckCircle2,
+    Cog, Radio, BookOpen, ShoppingCart, ChevronRight, CheckCircle2, Unlock,
 } from "lucide-react";
 import { MOCK_KITS, MOCK_COURSES, MOCK_COMPONENTS, AIScenario, Part } from "@/lib/mock-data";
 import type { ProjectPlanResult } from "@/lib/ai-builder/contracts";
+import { DemoProjectPlanner } from "@/lib/ai-builder/providers/demo";
 import { useTranslation } from "@/i18n/LanguageProvider";
+import DemoRequestModal, { useDemoRequest } from "@/components/shared/DemoRequestModal";
 
 gsap.registerPlugin(useGSAP);
 
@@ -25,7 +27,8 @@ type FlowMsg =
     | { id: string; role: "assistant"; type: "kits-card"; kitIds: string[]; done?: boolean }
     | { id: string; role: "assistant"; type: "courses-card"; courseIds: string[]; done?: boolean }
     | { id: string; role: "assistant"; type: "parts-card"; parts: { partId: string; qty: number; reason?: string }[]; done?: boolean }
-    | { id: string; role: "assistant"; type: "open-builder-cta"; scenario: AIScenario; done?: boolean };
+    | { id: string; role: "assistant"; type: "open-builder-cta"; scenario: AIScenario; done?: boolean }
+    | { id: string; role: "assistant"; type: "access-card"; prompt: string; done?: boolean };
 
 type Intent =
     | { kind: "project"; scenario: AIScenario; plan: ProjectPlanResult }
@@ -45,16 +48,26 @@ const SUGGESTIONS: { label: string; prompt: string; icon: React.ReactNode; accen
 
 // Route every free-form project request through the same server-side provider boundary.
 async function detectIntent(prompt: string, locale: "es" | "en"): Promise<Intent> {
-    const response = await fetch("/api/ai-builder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, locale }),
-    });
-    const payload = (await response.json()) as ProjectPlanResult | { error: string };
-    if (!response.ok || "error" in payload) {
-        throw new Error("error" in payload ? payload.error : "No se pudo generar el plan.");
+    try {
+        const response = await fetch("/api/ai-builder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt, locale }),
+        });
+        const payload = (await response.json()) as ProjectPlanResult | { error: string };
+        if (!response.ok || "error" in payload) {
+            if (response.status < 500) {
+                throw new Error("error" in payload ? payload.error : "No se pudo generar el plan.");
+            }
+            throw new TypeError("AI builder route unavailable");
+        }
+        return { kind: "project", scenario: payload.scenario, plan: payload };
+    } catch (error) {
+        // Keep the keyless demo usable during a dev-server restart or temporary network failure.
+        if (!(error instanceof TypeError)) throw error;
+        const payload = await new DemoProjectPlanner().generatePlan({ prompt, locale });
+        return { kind: "project", scenario: payload.scenario, plan: payload };
     }
-    return { kind: "project", scenario: payload.scenario, plan: payload };
 }
 
 // ─── Typewriter hook ─────────────────────────────────────────
@@ -96,6 +109,7 @@ type Props = {
 
 export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
     const { locale } = useTranslation();
+    const demo = useDemoRequest();
     const containerRef = useRef<HTMLDivElement>(null);
     const threadRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -211,6 +225,16 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
             await sleep(500);
             markDone();
 
+            if (intent.plan.mode === "demo") {
+                setThread(t => [...t, {
+                    id: `a-access-${Date.now()}`,
+                    role: "assistant",
+                    type: "access-card",
+                    prompt,
+                    done: true,
+                }]);
+            }
+
         } else if (intent.kind === "course") {
             await pushTyped({
                 id: `a-text-${Date.now()}`,
@@ -273,12 +297,22 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
                         Dystronic AI Lab
                     </span>
                 </div>
-                <Link
-                    href="/"
-                    className="font-mono text-[9px] text-white/30 hover:text-white/60 tracking-widest uppercase transition-colors"
-                >
-                    ← Volver al inicio
-                </Link>
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => demo.request("ai-builder")}
+                        className="hidden sm:inline-flex items-center gap-1.5 border border-[#39ff14]/30 bg-[#39ff14]/[0.06] px-2.5 py-1.5 font-mono text-[9px] font-bold uppercase tracking-widest text-[#39ff14] transition-colors hover:bg-[#39ff14]/10"
+                    >
+                        <Unlock size={10} />
+                        Acceso completo
+                    </button>
+                    <Link
+                        href="/"
+                        className="font-mono text-[9px] text-white/30 hover:text-white/60 tracking-widest uppercase transition-colors"
+                    >
+                        ← Volver al inicio
+                    </Link>
+                </div>
             </div>
 
             {/* Body */}
@@ -303,6 +337,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
                                     key={msg.id}
                                     msg={msg}
                                     onOpenScenario={onOpenScenario}
+                                    onRequestAccess={(prompt) => demo.request("ai-builder", `Proyecto solicitado: ${prompt}`)}
                                 />
                             ))}
                             {busy && thread[thread.length - 1]?.role !== "assistant" && (
@@ -343,6 +378,12 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
                     </div>
                 </div>
             )}
+            <DemoRequestModal
+                open={demo.open}
+                onClose={demo.close}
+                context={demo.context}
+                extraInfo={demo.extraInfo}
+            />
         </div>
     );
 }
@@ -374,7 +415,7 @@ function WelcomeHero({
                 <div className="w-eyebrow inline-flex items-center gap-2 mb-10 px-3 py-1.5 border border-[#00f0ff]/25 bg-[#00f0ff]/[0.06]">
                     <Sparkles size={11} className="text-[#00f0ff]" />
                     <span className="font-mono text-[10px] tracking-[0.32em] uppercase text-[#00f0ff]">
-                        AI Lab Builder · Beta
+                        Demo interactiva · acceso por solicitud
                     </span>
                 </div>
 
@@ -443,10 +484,11 @@ function WelcomeHero({
 
 // ─── ThreadItem (each message bubble) ───────────────────────────
 function ThreadItem({
-    msg, onOpenScenario,
+    msg, onOpenScenario, onRequestAccess,
 }: {
     msg: FlowMsg;
     onOpenScenario: (scenario: AIScenario) => void;
+    onRequestAccess: (prompt: string) => void;
 }) {
     if (msg.role === "user") {
         return (
@@ -473,6 +515,10 @@ function ThreadItem({
 
     if (msg.type === "open-builder-cta") return (
         <OpenBuilderCTA scenario={msg.scenario} onOpen={() => onOpenScenario(msg.scenario)} />
+    );
+
+    if (msg.type === "access-card") return (
+        <DemoAccessCard onRequest={() => onRequestAccess(msg.prompt)} />
     );
 
     return null;
@@ -726,6 +772,32 @@ function OpenBuilderCTA({ scenario, onOpen }: { scenario: AIScenario; onOpen: ()
                 {/* Scan line effect */}
                 <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00f0ff]/80 to-transparent opacity-60" />
             </button>
+        </AvatarBubble>
+    );
+}
+
+function DemoAccessCard({ onRequest }: { onRequest: () => void }) {
+    return (
+        <AvatarBubble accent="#39ff14">
+            <div className="w-full max-w-[90%] border border-[#39ff14]/25 bg-[#39ff14]/[0.045] p-4 sm:flex sm:items-center sm:gap-4">
+                <div className="flex-1">
+                    <div className="mb-1 flex items-center gap-2 text-[#39ff14]">
+                        <Unlock size={12} />
+                        <span className="text-[9px] font-bold uppercase tracking-[0.22em]">Modo demo</span>
+                    </div>
+                    <p className="text-[12px] leading-relaxed text-white/65">
+                        Prueba el flujo con este proyecto. Solicita acceso para generar proyectos propios con IA y activar el checkout.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    onClick={onRequest}
+                    className="mt-3 inline-flex w-full shrink-0 items-center justify-center gap-2 bg-[#39ff14] px-3 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wider text-black transition-colors hover:bg-[#62ff47] sm:mt-0 sm:w-auto"
+                >
+                    Solicitar acceso
+                    <ArrowRight size={11} />
+                </button>
+            </div>
         </AvatarBubble>
     );
 }
