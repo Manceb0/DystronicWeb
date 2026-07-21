@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Canvas, type ThreeEvent } from "@react-three/fiber";
 import { Edges, Grid, OrbitControls } from "@react-three/drei";
-import { Box, Focus, MousePointer2, Rotate3D } from "lucide-react";
+import { Box, Code2, Download, ExternalLink, Focus, MousePointer2, Rotate3D } from "lucide-react";
 import type { Locale } from "@/i18n/types";
 
 type MechanicalPart = {
@@ -11,15 +11,17 @@ type MechanicalPart = {
   group: string;
   label: { es: string; en: string };
   color: string;
+  forgeObject: string;
+  dimensions: string;
 };
 
 const MECHANICAL_PARTS: MechanicalPart[] = [
-  { id: "chassis", group: "structure", label: { es: "Chasis principal", en: "Main chassis" }, color: "#38bdf8" },
-  { id: "controller", group: "electronics", label: { es: "Soporte Arduino", en: "Arduino mount" }, color: "#00f0ff" },
-  { id: "battery", group: "electronics", label: { es: "Soporte de batería", en: "Battery holder" }, color: "#facc15" },
-  { id: "driver", group: "electronics", label: { es: "Soporte del driver", en: "Motor driver mount" }, color: "#a855f7" },
-  { id: "sensor", group: "electronics", label: { es: "Soporte ultrasónico", en: "Ultrasonic mount" }, color: "#39ff14" },
-  { id: "wheels", group: "motion", label: { es: "Ruedas y ejes", en: "Wheels and axles" }, color: "#f97316" },
+  { id: "chassis", group: "structure", label: { es: "Chasis principal", en: "Main chassis" }, color: "#38bdf8", forgeObject: "Chassis", dimensions: "142 × 84 × 4 mm" },
+  { id: "controller", group: "electronics", label: { es: "Soporte Arduino", en: "Arduino mount" }, color: "#00f0ff", forgeObject: "Arduino mount", dimensions: "42 × 34 × 8 mm" },
+  { id: "battery", group: "electronics", label: { es: "Soporte de batería", en: "Battery holder" }, color: "#facc15", forgeObject: "Battery holder", dimensions: "44 × 32 × 10 mm" },
+  { id: "driver", group: "electronics", label: { es: "Soporte del driver", en: "Motor driver mount" }, color: "#a855f7", forgeObject: "Motor driver mount", dimensions: "34 × 22 × 8 mm" },
+  { id: "sensor", group: "electronics", label: { es: "Soporte ultrasónico", en: "Ultrasonic mount" }, color: "#39ff14", forgeObject: "Ultrasonic mount", dimensions: "8 × 40 × 22 mm" },
+  { id: "wheels", group: "motion", label: { es: "Ruedas y ejes", en: "Wheels and axles" }, color: "#f97316", forgeObject: "Wheel assembly", dimensions: "Ø 36 mm" },
 ];
 
 function SelectableBox({
@@ -105,6 +107,12 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
         selected: "Pieza seleccionada",
         hint: "Arrastra para rotar, usa la rueda para acercar o alejar",
         reset: "Centrar modelo",
+        forgeTitle: "Flujo ForgeCAD",
+        ready: "Fuente paramétrica preparada",
+        object: "Objeto seleccionado",
+        dimensions: "Dimensiones",
+        download: "Descargar .forge.js",
+        open: "Abrir ForgeCAD",
       }
     : {
         title: "Mechanical view",
@@ -115,6 +123,12 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
         selected: "Selected part",
         hint: "Drag to rotate, use the wheel to zoom",
         reset: "Center model",
+        forgeTitle: "ForgeCAD workflow",
+        ready: "Parametric source ready",
+        object: "Selected object",
+        dimensions: "Dimensions",
+        download: "Download .forge.js",
+        open: "Open ForgeCAD",
       };
 
   const groupLabels: Record<string, string> = {
@@ -209,7 +223,40 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      <div className="absolute right-3 bottom-3 z-20 hidden md:flex items-center gap-2 bg-[#0a0a0d]/90 border border-white/10 px-2.5 py-1.5 text-[9px] text-gray-500">
+      <aside className="absolute right-3 top-14 z-20 hidden w-64 border border-white/10 bg-[#0a0a0d]/95 md:block">
+        <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2.5">
+          <Code2 size={12} className="text-[#00f0ff]" />
+          <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300">{copy.forgeTitle}</span>
+          <span className="ml-auto h-1.5 w-1.5 bg-[#39ff14]" title={copy.ready} />
+        </div>
+        <div className="p-3">
+          <p className="mb-1 text-[8px] uppercase tracking-widest text-gray-600">{copy.object}</p>
+          <p className="truncate text-xs font-bold text-white">{selected.forgeObject}</p>
+          <div className="mt-3 grid grid-cols-2 gap-2 border-y border-white/[0.07] py-2.5">
+            <div>
+              <p className="text-[8px] uppercase tracking-wider text-gray-600">ID</p>
+              <p className="mt-1 text-[10px] text-[#00f0ff]">{selected.id}</p>
+            </div>
+            <div>
+              <p className="text-[8px] uppercase tracking-wider text-gray-600">{copy.dimensions}</p>
+              <p className="mt-1 text-[10px] text-gray-300">{selected.dimensions}</p>
+            </div>
+          </div>
+          <code className="mt-3 block overflow-hidden text-ellipsis whitespace-nowrap bg-[#050507] px-2 py-2 text-[9px] text-gray-400">
+            {`return { "${selected.forgeObject}": shape }`}
+          </code>
+          <div className="mt-3 grid gap-2">
+            <a href="/models/rc-car.forge.js" download className="flex items-center justify-center gap-2 border border-[#00f0ff]/40 px-2 py-2 text-[9px] font-bold text-[#00f0ff] hover:bg-[#00f0ff]/10">
+              <Download size={11} /> {copy.download}
+            </a>
+            <a href="https://forgecad.io/" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 px-2 py-1.5 text-[9px] text-gray-500 hover:text-white">
+              <ExternalLink size={11} /> {copy.open}
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <div className="absolute right-3 bottom-3 z-20 hidden lg:flex items-center gap-2 bg-[#0a0a0d]/90 border border-white/10 px-2.5 py-1.5 text-[9px] text-gray-500">
         <Rotate3D size={11} className="text-[#00f0ff]" />
         {copy.hint}
       </div>
