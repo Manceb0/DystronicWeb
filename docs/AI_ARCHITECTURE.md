@@ -6,30 +6,35 @@ The AI Builder must be testable without credentials while showing a production-s
 
 ## Request flow
 
-```text
-AI Builder UI
-    |
-    | POST { prompt, locale }
-    v
-Next.js Route Handler
-    |
-    | validates content type, length, and locale
-    v
-Provider selector
-    |-- demo (default, no network, no cost)
-    `-- openai (only when explicitly configured with a server-side key)
-             |
-             v
-        Responses API + strict JSON Schema
-             |
-             v
-        application graph validation
-    |
-    v
-Typed ProjectPlanResult
-    |
-    v
-Interactive wiring board
+```mermaid
+flowchart LR
+    UI["AI Builder UI"] -->|"POST: prompt + locale"| API["Next.js Route Handler"]
+    API --> VALIDATE{"Validate request"}
+    VALIDATE -->|"Valid"| SELECT{"Select provider"}
+    VALIDATE -->|"Invalid"| ERROR["Structured error response"]
+
+    SELECT -->|"Default · no key · no cost"| DEMO["Local demo provider"]
+    SELECT -->|"Server key configured"| OPENAI["OpenAI provider"]
+
+    OPENAI --> RESPONSES["Responses API"]
+    RESPONSES --> SCHEMA["Strict JSON Schema"]
+    DEMO --> GRAPH["Application graph validation"]
+    SCHEMA --> GRAPH
+
+    GRAPH --> RESULT["Typed ProjectPlanResult"]
+    RESULT --> BOARD["Interactive wiring board"]
+
+    classDef interface fill:#062f35,stroke:#00d9e8,color:#e8feff,stroke-width:2px;
+    classDef decision fill:#2a2410,stroke:#ffc72c,color:#fff7d1,stroke-width:2px;
+    classDef provider fill:#201135,stroke:#a855f7,color:#f4eaff,stroke-width:2px;
+    classDef output fill:#0c321c,stroke:#39ff14,color:#ecffe8,stroke-width:2px;
+    classDef error fill:#351017,stroke:#f43f5e,color:#ffe8ed;
+
+    class UI,API interface;
+    class VALIDATE,SELECT decision;
+    class DEMO,OPENAI,RESPONSES,SCHEMA provider;
+    class GRAPH,RESULT,BOARD output;
+    class ERROR error;
 ```
 
 ## Why a provider boundary
