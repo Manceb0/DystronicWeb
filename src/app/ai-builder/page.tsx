@@ -40,6 +40,34 @@ type ChatMessage = {
     content: string;
 };
 
+function WiringLegend({ labels }: { labels: { title: string; nodeTypes: string; connections: string; data: string; power: string; ground: string } }) {
+    return (
+        <div className="absolute bottom-4 left-4 z-30 hidden w-52 border border-[#1e1e24] bg-[#09090b] p-3 pointer-events-none sm:block">
+            <h4 className="mb-2.5 text-[9px] font-bold uppercase tracking-widest text-gray-500">{labels.title}</h4>
+            <p className="mb-1.5 text-[8px] font-bold uppercase tracking-widest text-gray-600">{labels.nodeTypes}</p>
+            <ul className="mb-3 space-y-1">
+                {([["MCU", "#00f0ff"], ["SENSOR", "#39ff14"], ["ACTUATOR", "#ff5e00"], ["POWER", "#ffcc00"], ["MODULE", "#a855f7"], ["DISPLAY", "#ec4899"]] as [string, string][]).map(([label, color]) => (
+                    <li key={label} className="flex items-center gap-2 text-[9px]">
+                        <span className="h-2 w-2 shrink-0 border" style={{ borderColor: color, background: `${color}18` }} />
+                        <span style={{ color }}>{label}</span>
+                    </li>
+                ))}
+            </ul>
+            <p className="mb-1.5 border-t border-white/5 pt-2 text-[8px] font-bold uppercase tracking-widest text-gray-600">{labels.connections}</p>
+            <ul className="space-y-1.5 text-[9px]">
+                {[[labels.data, "#39ff14", false], [labels.power, "#f97316", true], [labels.ground, "#94a3b8", false]].map(([label, color, dashed]) => (
+                    <li key={String(label)} className="flex items-center gap-2" style={{ color: String(color) }}>
+                        <span className={`relative h-px w-6 ${dashed ? "border-t border-dashed" : ""}`} style={dashed ? { borderColor: String(color) } : { backgroundColor: String(color) }}>
+                            <span className="absolute -right-0.5 -top-[2px] h-0 w-0 border-y-[2px] border-l-[4px] border-y-transparent" style={{ borderLeftColor: String(color) }} />
+                        </span>
+                        {String(label)}
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
 function AIBuilderContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -909,46 +937,17 @@ function AIBuilderContent() {
                                     );
                                 })}
 
-                                {/* Full legend */}
-                                <div className="absolute bottom-4 left-4 w-52 border border-[#1e1e24] bg-[#09090b]/95 backdrop-blur-md p-3 z-20 pointer-events-none">
-                                    <h4 className="text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-2.5">{t("aiBuilder.schematic")}</h4>
-
-                                    <p className="text-[8px] text-gray-600 uppercase tracking-widest mb-1.5 font-bold">{t("aiBuilder.nodeTypes")}</p>
-                                    <ul className="space-y-1 mb-3">
-                                        {([
-                                            ["MCU",      "#00f0ff"],
-                                            ["SENSOR",   "#39ff14"],
-                                            ["ACTUATOR", "#ff5e00"],
-                                            ["POWER",    "#ffcc00"],
-                                            ["MODULE",   "#a855f7"],
-                                            ["DISPLAY",  "#ec4899"],
-                                        ] as [string, string][]).map(([label, color]) => (
-                                            <li key={label} className="flex items-center gap-2 text-[9px]">
-                                                <span className="w-2 h-2 shrink-0 border" style={{ borderColor: color, background: color + "18" }} />
-                                                <span style={{ color }}>{label}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-
-                                    <p className="text-[8px] text-gray-600 uppercase tracking-widest mb-1.5 font-bold border-t border-white/5 pt-2">{t("aiBuilder.connections")}</p>
-                                    <ul className="space-y-1.5">
-                                        <li className="flex items-center gap-2 text-[9px]">
-                                            <svg width="24" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#39ff14" strokeWidth="1.5" markerEnd="url(#arrow-data)" /></svg>
-                                            <span className="text-[#39ff14]">{t("aiBuilder.data")}</span>
-                                        </li>
-                                        <li className="flex items-center gap-2 text-[9px]">
-                                            <svg width="24" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#f97316" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrow-power)" /></svg>
-                                            <span className="text-[#f97316]">{t("aiBuilder.power")}</span>
-                                        </li>
-                                        <li className="flex items-center gap-2 text-[9px]">
-                                            <svg width="24" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#arrow-ground)" /></svg>
-                                            <span className="text-slate-400">{t("aiBuilder.ground")}</span>
-                                        </li>
-                                    </ul>
-                                </div>
                             </div>
                         </div>
                         </div>
+                        <WiringLegend labels={{
+                            title: t("aiBuilder.schematic"),
+                            nodeTypes: t("aiBuilder.nodeTypes"),
+                            connections: t("aiBuilder.connections"),
+                            data: t("aiBuilder.data"),
+                            power: t("aiBuilder.power"),
+                            ground: t("aiBuilder.ground"),
+                        }} />
                         </>
                     )}
 

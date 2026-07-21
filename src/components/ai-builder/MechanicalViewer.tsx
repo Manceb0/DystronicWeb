@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Canvas, type ThreeEvent } from "@react-three/fiber";
 import { Edges, Grid, Html, Line, OrbitControls } from "@react-three/drei";
-import { Box, ChevronRight, Code2, Download, ExternalLink, Focus, Layers3, Rotate3D } from "lucide-react";
+import { Box, ChevronRight, Focus, Layers3, Ruler, Rotate3D } from "lucide-react";
 import type { Locale } from "@/i18n/types";
 
 type MechanicalPart = {
@@ -179,12 +179,7 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
         assembly: "Vehículo RC",
         hint: "Arrastra para rotar, usa la rueda para acercar o alejar",
         reset: "Centrar modelo",
-        forgeTitle: "Flujo ForgeCAD",
-        ready: "Fuente paramétrica preparada",
-        object: "Objeto seleccionado",
         dimensions: "Dimensiones",
-        download: "Descargar .forge.js",
-        open: "Abrir ForgeCAD",
       }
     : {
         title: "Mechanical view",
@@ -196,12 +191,7 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
         assembly: "RC vehicle",
         hint: "Drag to rotate, use the wheel to zoom",
         reset: "Center model",
-        forgeTitle: "ForgeCAD workflow",
-        ready: "Parametric source ready",
-        object: "Selected object",
         dimensions: "Dimensions",
-        download: "Download .forge.js",
-        open: "Open ForgeCAD",
       };
 
   const groupLabels: Record<string, string> = {
@@ -316,46 +306,21 @@ export default function MechanicalViewer({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      <aside className="absolute right-3 top-14 z-20 hidden w-64 border border-white/10 bg-[#0a0a0d]/95 md:block">
+      <aside className="absolute right-3 top-14 z-20 hidden w-52 border border-white/10 bg-[#0a0a0d]/95 md:block">
         <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2.5">
-          <Code2 size={12} className="text-[#00f0ff]" />
-          <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300">{copy.forgeTitle}</span>
-          <span className="ml-auto h-1.5 w-1.5 bg-[#39ff14]" title={copy.ready} />
+          <Ruler size={12} className="text-[#00f0ff]" />
+          <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300">{copy.dimensions}</span>
         </div>
         <div className="p-3">
-          <p className="mb-1 text-[8px] uppercase tracking-widest text-gray-600">{copy.object}</p>
-          <p className="truncate text-xs font-bold text-white">{selected.forgeObject}</p>
-          <div className="mt-3 border-y border-white/[0.07] py-2.5">
-            <p className="mb-2 text-[8px] uppercase tracking-wider text-gray-600">{copy.dimensions}</p>
-            <div className="grid grid-cols-3 gap-2">
-              {selected.axes.map((value, index) => (
-                <div key={index}>
-                  <p className="text-[8px] font-bold" style={{ color: ["#e2e8f0", "#7dd3fc", "#fde047"][index] }}>{["X", "Y", "Z"][index]}</p>
-                  <p className="mt-1 text-[10px] text-gray-300">{value} mm</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <div>
-              <p className="text-[8px] uppercase tracking-wider text-gray-600">ID</p>
-              <p className="mt-1 text-[10px] text-[#00f0ff]">{selected.id}</p>
-            </div>
-            <div>
-              <p className="text-[8px] uppercase tracking-wider text-gray-600">TOTAL</p>
-              <p className="mt-1 text-[10px] text-gray-300">{selected.dimensions}</p>
-            </div>
-          </div>
-          <code className="mt-3 block overflow-hidden text-ellipsis whitespace-nowrap bg-[#050507] px-2 py-2 text-[9px] text-gray-400">
-            {`return { "${selected.forgeObject}": shape }`}
-          </code>
-          <div className="mt-3 grid gap-2">
-            <a href="/models/rc-car.forge.js" download className="flex items-center justify-center gap-2 border border-[#00f0ff]/40 px-2 py-2 text-[9px] font-bold text-[#00f0ff] hover:bg-[#00f0ff]/10">
-              <Download size={11} /> {copy.download}
-            </a>
-            <a href="https://forgecad.io/" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 px-2 py-1.5 text-[9px] text-gray-500 hover:text-white">
-              <ExternalLink size={11} /> {copy.open}
-            </a>
+          <p className="truncate text-[11px] font-bold text-white">{selected.label[locale]}</p>
+          <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/[0.07] pt-3">
+            {selected.axes.map((value, index) => (
+              <div key={index}>
+                <p className="text-[8px] font-bold" style={{ color: ["#e2e8f0", "#7dd3fc", "#fde047"][index] }}>{["X", "Y", "Z"][index]}</p>
+                <p className="mt-1 text-[10px] text-gray-300">{value}</p>
+                <p className="text-[7px] text-gray-600">mm</p>
+              </div>
+            ))}
           </div>
         </div>
       </aside>
