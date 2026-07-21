@@ -10,7 +10,7 @@ import {
     Cog, Radio, BookOpen, ShoppingCart, ChevronRight, CheckCircle2,
 } from "lucide-react";
 import { MOCK_KITS, MOCK_COURSES, MOCK_COMPONENTS, AIScenario, Part } from "@/lib/mock-data";
-import type { AIProviderMode, ProjectPlanResult } from "@/lib/ai-builder/contracts";
+import type { ProjectPlanResult } from "@/lib/ai-builder/contracts";
 import { useTranslation } from "@/i18n/LanguageProvider";
 
 gsap.registerPlugin(useGSAP);
@@ -21,7 +21,6 @@ type FlowMsg =
     | { id: string; role: "user"; content: string }
     | { id: string; role: "assistant"; type: "text"; content: string; done?: boolean }
     | { id: string; role: "assistant"; type: "thinking" }
-    | { id: string; role: "assistant"; type: "provider-note"; mode: AIProviderMode; label: string }
     | { id: string; role: "assistant"; type: "scenario-card"; scenario: AIScenario; done?: boolean }
     | { id: string; role: "assistant"; type: "kits-card"; kitIds: string[]; done?: boolean }
     | { id: string; role: "assistant"; type: "courses-card"; courseIds: string[]; done?: boolean }
@@ -176,14 +175,6 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
 
         if (intent.kind === "project") {
             const scenario = intent.scenario;
-            setThread(t => [...t, {
-                id: `a-provider-${Date.now()}`,
-                role: "assistant",
-                type: "provider-note",
-                mode: intent.plan.mode,
-                label: intent.plan.notice,
-            }]);
-
             await pushTyped({
                 id: `a-text-${Date.now()}`,
                 role: "assistant", type: "text",
@@ -472,8 +463,6 @@ function ThreadItem({
 
     if (msg.type === "text") return <TextBubble fullText={msg.content} done={msg.done ?? false} />;
 
-    if (msg.type === "provider-note") return <ProviderNote mode={msg.mode} label={msg.label} />;
-
     if (msg.type === "scenario-card") return <ScenarioCard scenario={msg.scenario} done={msg.done ?? false} />;
 
     if (msg.type === "parts-card") return <PartsCard parts={msg.parts} done={msg.done ?? false} />;
@@ -522,23 +511,6 @@ function ThinkingBubble() {
                     ))}
                 </span>
                 <span className="text-[11px] text-white/45 tracking-wide">Analizando tu proyecto</span>
-            </div>
-        </AvatarBubble>
-    );
-}
-
-function ProviderNote({ mode, label }: { mode: AIProviderMode; label: string }) {
-    const isDemo = mode === "demo";
-    return (
-        <AvatarBubble accent={isDemo ? "#f59e0b" : "#39ff14"}>
-            <div className="max-w-[90%] border border-white/10 bg-white/[0.025] px-3 py-2 flex items-start gap-2">
-                <span className={`mt-1 h-1.5 w-1.5 rounded-full shrink-0 ${isDemo ? "bg-[#f59e0b]" : "bg-[#39ff14]"}`} />
-                <p className="text-[10px] leading-relaxed text-white/45">
-                    <span className="uppercase tracking-widest text-white/70 mr-2">
-                        {isDemo ? "Demo provider" : "OpenAI provider"}
-                    </span>
-                    {label}
-                </p>
             </div>
         </AvatarBubble>
     );
