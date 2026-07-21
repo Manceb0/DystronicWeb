@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated demo recording intermediates
+artifacts/demo/page@*.webm
+artifacts/demo/*.webm
+artifacts/demo/*.wav
+artifacts/demo/contact-sheet.png
+scripts/record-demo.cjs

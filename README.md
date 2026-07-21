@@ -5,9 +5,18 @@ Dystronic is an education-first electronics workspace that connects a local part
 ## OpenAI Build Week 2026
 
 - **Track:** Education
-- **Build Week branch:** `codex/build-week-ai-architecture`
+- **Submission branch:** `master`
+- **Development branch:** `codex/build-week-ai-architecture`
 
-Dystronic existed before Build Week. The work added during the submission period is intentionally isolated in the branch above and documented in commit history. The Build Week extension turns the previously hard-coded AI Builder demonstration into a provider-based, catalog-grounded planning pipeline.
+Dystronic existed before Build Week. The submission work is documented in commit history, with the original development branch preserved for review. The Build Week extension turns the previously hard-coded AI Builder demonstration into a provider-based, catalog-grounded planning pipeline.
+
+### Competition demo
+
+[![Watch the 82-second Dystronic product demo](artifacts/demo/dystronic-demo-cover.jpg)](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-build-week-demo.mp4)
+
+**[Watch the full 82-second demo with English narration →](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-build-week-demo.mp4)**
+
+The recording follows one continuous flow: idea → generated plan → wiring graph → mechanical dimensions → build instructions → bill of materials → checkout access.
 
 ### What is new during Build Week
 
@@ -18,7 +27,7 @@ Dystronic existed before Build Week. The work added during the submission period
 - Server-side validation that rejects unknown catalog parts, duplicate nodes, and invalid graph edges.
 - A real `/api/ai-builder` boundary with input validation and server-only secret handling.
 - Dynamic scenarios: the interactive board now consumes the provider result instead of always replacing the user's request with a fixed RC-car prompt.
-- Visible provider disclosure in the product so judges can distinguish offline demo output from API-backed output.
+- Clear demo-mode disclosure and an access request path for live AI generation and checkout.
 
 See [Architecture](docs/AI_ARCHITECTURE.md) for the full request flow and design decisions.
 
@@ -31,7 +40,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000/ai-builder`, enter an idea, and follow the generated plan into the interactive board. With the default environment file, the UI clearly labels the result as `Demo provider`.
+Open `http://localhost:3000/ai-builder`, enter an idea, and follow the generated plan into the interactive board. With the default environment file, the UI clearly identifies the experience as a demo.
 
 ## Optional OpenAI provider
 
