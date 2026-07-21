@@ -686,12 +686,21 @@ function AIBuilderContent() {
                             <button onClick={frameBoardForViewport} className="p-1 text-gray-400 hover:text-white transition-colors" title="Reset zoom"><RotateCcw size={13} /></button>
                         </div>
 
-                        <div ref={boardScrollRef} className="flex-1 w-full h-full relative z-10 overflow-auto p-2 sm:p-3 min-h-0 scroll-smooth">
+                        {/* Fixed board identity: canvas scrolling and zooming must not move this header. */}
+                        <div className="mx-2 mt-2 sm:mx-3 sm:mt-3 h-8 shrink-0 border border-[#00f0ff]/20 bg-[#0a0a0d] flex items-center px-3 gap-2 z-20 pointer-events-none">
+                            <LayoutTemplate size={12} className="text-[#00f0ff]" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#00f0ff]">{t("aiBuilder.prototypeBoard")}</span>
+                            <span className="text-[10px] text-gray-500 ml-auto hidden sm:inline">
+                                {leftPanelView === "chat" ? t("aiBuilder.clickChatHint") : t("aiBuilder.dragHint")}
+                            </span>
+                        </div>
+
+                        <div ref={boardScrollRef} className="flex-1 w-full h-full relative z-10 overflow-auto px-2 pb-2 sm:px-3 sm:pb-3 min-h-0 scroll-smooth">
                         <div style={{ transform: `scale(${boardZoom})`, transformOrigin: "top left", width: `${CANVAS_W * boardZoom}px`, height: `${CANVAS_H * boardZoom}px`, minWidth: `${CANVAS_W * boardZoom}px`, minHeight: `${CANVAS_H * boardZoom}px` }}>
                             <div
                                 ref={canvasRef}
                                 onPointerDown={handleBoardPointerDown}
-                                className="w-[1200px] h-[800px] shrink-0 relative rounded-sm border border-[#00f0ff]/20 bg-[#0c0c10] cursor-grab active:cursor-grabbing shadow-[0_0_46px_rgba(0,240,255,0.08)]"
+                                className="w-[1200px] h-[800px] shrink-0 relative border border-t-0 border-[#00f0ff]/20 bg-[#0c0c10] cursor-grab active:cursor-grabbing shadow-[0_0_46px_rgba(0,240,255,0.08)]"
                                 style={{
                                     backgroundImage: `
                                         linear-gradient(to right, rgba(0,240,255,0.12) 1px, transparent 1px),
@@ -701,13 +710,6 @@ function AIBuilderContent() {
                                     transformOrigin: "top left",
                                 }}
                             >
-                                <div className="absolute top-0 left-0 right-0 h-8 border-b border-[#00f0ff]/20 bg-[#0a0a0d]/80 flex items-center px-3 gap-2 z-20 pointer-events-none">
-                                    <LayoutTemplate size={12} className="text-[#00f0ff]" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#00f0ff]">{t("aiBuilder.prototypeBoard")}</span>
-                                    <span className="text-[10px] text-gray-500 ml-auto">
-                                        {leftPanelView === "chat" ? t("aiBuilder.clickChatHint") : t("aiBuilder.dragHint")}
-                                    </span>
-                                </div>
                                 {/* Connections SVG Layer */}
                                 <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: "visible" }}>
                                     <defs>
