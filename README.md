@@ -56,7 +56,9 @@ OPENAI_MODEL=gpt-5.6-sol
 
 Restart the development server after changing environment variables. `OPENAI_API_KEY` must never use a `NEXT_PUBLIC_` prefix. If OpenAI mode is selected without a key, Dystronic safely falls back to the local provider and discloses that fallback in the response.
 
-## How Codex contributed
+## How Codex and GPT-5.6 were used
+
+### Codex
 
 Codex was used as the implementation partner for the Build Week extension:
 
@@ -66,6 +68,12 @@ Codex was used as the implementation partner for the Build Week extension:
 - Designed the provider interface, JSON Schema, catalog grounding, validation boundary, and safe demo fallback.
 - Connected the existing UI to the new pipeline while preserving the visual product experience.
 - Ran TypeScript, production build, and local endpoint checks.
+
+### GPT-5.6 integration
+
+The source includes a production-shaped GPT-5.6 provider in `src/lib/ai-builder/providers/openai.ts`. It uses the OpenAI Responses API, a catalog-grounded prompt, and strict structured output to return the same typed project graph consumed by the interactive board. The provider is selected only when `DYSTRONIC_AI_PROVIDER=openai` and a server-side `OPENAI_API_KEY` are present.
+
+The submitted public demo runs through the keyless local provider because the project owner does not have API credits. GPT-5.6 calls were therefore not executed or presented as live model output. This separation lets judges inspect the complete GPT-5.6 integration while evaluating the full UI, validation, and rendering flow without credentials or paid calls.
 
 Product decisions remained human-owned: Dystronic's educational focus, the no-cost default, explicit disclosure of demo behavior, and the decision not to claim an API call that was never made.
 
