@@ -17,8 +17,6 @@ import DemoRequestModal, { useDemoRequest } from "@/components/shared/DemoReques
 
 gsap.registerPlugin(useGSAP);
 
-const DEMO_RC_PROMPT = "Quiero hacer un carro RC con sensores";
-
 type FlowMsg =
     | { id: string; role: "user"; content: string }
     | { id: string; role: "assistant"; type: "text"; content: string; done?: boolean }
@@ -37,13 +35,22 @@ type Intent =
     | { kind: "parts"; partIds: string[] }
     | { kind: "general" };
 
-const SUGGESTIONS: { label: string; prompt: string; icon: React.ReactNode; accent: string }[] = [
+const SUGGESTIONS_ES: { label: string; prompt: string; icon: React.ReactNode; accent: string }[] = [
     { label: "Carro RC",            prompt: "Quiero construir un carro RC con sensores",          icon: <Workflow size={14} />,      accent: "#f43f5e" },
     { label: "Estación climática",  prompt: "Necesito una estación meteorológica IoT",            icon: <Radio size={14} />,         accent: "#38bdf8" },
     { label: "Brazo robótico",      prompt: "Cómo armar un brazo robótico de 4 ejes",             icon: <Cog size={14} />,           accent: "#a855f7" },
     { label: "Aprender Arduino",    prompt: "Quiero aprender Arduino desde cero",                 icon: <GraduationCap size={14} />, accent: "#f59e0b" },
     { label: "Kit para empezar",    prompt: "¿Qué kit me recomiendan para empezar?",              icon: <PackageOpen size={14} />,   accent: "#34d399" },
     { label: "Comprar sensores",    prompt: "Necesito sensores para detección de obstáculos",     icon: <Cpu size={14} />,           accent: "#00f0ff" },
+];
+
+const SUGGESTIONS_EN: typeof SUGGESTIONS_ES = [
+    { label: "RC car",          prompt: "I want to build an RC car with sensors",           icon: <Workflow size={14} />,      accent: "#f43f5e" },
+    { label: "Weather station", prompt: "I need an IoT weather station",                    icon: <Radio size={14} />,         accent: "#38bdf8" },
+    { label: "Robotic arm",     prompt: "How can I build a four-axis robotic arm?",         icon: <Cog size={14} />,           accent: "#a855f7" },
+    { label: "Learn Arduino",   prompt: "I want to learn Arduino from scratch",             icon: <GraduationCap size={14} />, accent: "#f59e0b" },
+    { label: "Starter kit",     prompt: "Which kit do you recommend for getting started?",  icon: <PackageOpen size={14} />,   accent: "#34d399" },
+    { label: "Buy sensors",     prompt: "I need sensors for obstacle detection",            icon: <Cpu size={14} />,           accent: "#00f0ff" },
 ];
 
 // Route every free-form project request through the same server-side provider boundary.
@@ -57,7 +64,7 @@ async function detectIntent(prompt: string, locale: "es" | "en"): Promise<Intent
         const payload = (await response.json()) as ProjectPlanResult | { error: string };
         if (!response.ok || "error" in payload) {
             if (response.status < 500) {
-                throw new Error("error" in payload ? payload.error : "No se pudo generar el plan.");
+                throw new Error("error" in payload ? payload.error : locale === "es" ? "No se pudo generar el plan." : "The plan could not be generated.");
             }
             throw new TypeError("AI builder route unavailable");
         }
@@ -176,7 +183,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
                     id: `a-error-${Date.now()}`,
                     role: "assistant",
                     type: "text",
-                    content: error instanceof Error ? error.message : "No se pudo generar el plan.",
+                    content: error instanceof Error ? error.message : locale === "es" ? "No se pudo generar el plan." : "The plan could not be generated.",
                     done: true,
                 },
             ]);
@@ -239,7 +246,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
             await pushTyped({
                 id: `a-text-${Date.now()}`,
                 role: "assistant", type: "text",
-                content: `Excelente decisión. Te recomiendo estos cursos guiados según tu nivel. Cada uno incluye material teórico y proyectos prácticos.`,
+                content: locale === "es" ? `Excelente decisión. Te recomiendo estos cursos guiados según tu nivel. Cada uno incluye material teórico y proyectos prácticos.` : `Great choice. These guided courses match your level and include both theory and hands-on projects.`,
             });
             setThread(t => [...t, { id: `a-crs-${Date.now()}`, role: "assistant", type: "courses-card", courseIds: intent.courseIds, done: false }]);
             await sleep(900);
@@ -249,7 +256,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
             await pushTyped({
                 id: `a-text-${Date.now()}`,
                 role: "assistant", type: "text",
-                content: `Te recomiendo estos kits curados según el tipo de proyecto que quieras explorar. Todos vienen con guía paso a paso.`,
+                content: locale === "es" ? `Te recomiendo estos kits curados según el tipo de proyecto que quieras explorar. Todos vienen con guía paso a paso.` : `These curated kits match the type of project you want to explore. Each includes a step-by-step guide.`,
             });
             setThread(t => [...t, { id: `a-kits-${Date.now()}`, role: "assistant", type: "kits-card", kitIds: intent.kitIds, done: false }]);
             await sleep(900);
@@ -260,7 +267,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
             await pushTyped({
                 id: `a-text-${Date.now()}`,
                 role: "assistant", type: "text",
-                content: `Aquí están los componentes que mejor se ajustan a tu búsqueda. Todos con precio Dystronic y stock local.`,
+                content: locale === "es" ? `Aquí están los componentes que mejor se ajustan a tu búsqueda. Todos con precio Dystronic y stock local.` : `These components best match your search, with Dystronic pricing and local availability.`,
             });
             setThread(t => [...t, { id: `a-parts-${Date.now()}`, role: "assistant", type: "parts-card", parts, done: false }]);
             await sleep(700);
@@ -269,7 +276,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
             await pushTyped({
                 id: `a-text-${Date.now()}`,
                 role: "assistant", type: "text",
-                content: `Puedo ayudarte a planear un proyecto desde cero, recomendarte un kit, sugerirte cursos o encontrar componentes específicos. Dime un poco más sobre lo que quieres lograr.`,
+                content: locale === "es" ? `Puedo ayudarte a planear un proyecto desde cero, recomendarte un kit, sugerirte cursos o encontrar componentes específicos. Dime un poco más sobre lo que quieres lograr.` : `I can plan a project from scratch, recommend a kit, suggest courses, or find specific components. Tell me more about what you want to build.`,
             });
         }
 
@@ -304,13 +311,13 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
                         className="hidden sm:inline-flex items-center gap-1.5 border border-[#39ff14]/30 bg-[#39ff14]/[0.06] px-2.5 py-1.5 font-mono text-[9px] font-bold uppercase tracking-widest text-[#39ff14] transition-colors hover:bg-[#39ff14]/10"
                     >
                         <Unlock size={10} />
-                        Acceso completo
+                        {locale === "es" ? "Acceso completo" : "Full access"}
                     </button>
                     <Link
                         href="/"
                         className="font-mono text-[9px] text-white/30 hover:text-white/60 tracking-widest uppercase transition-colors"
                     >
-                        ← Volver al inicio
+                        ← {locale === "es" ? "Volver al inicio" : "Back to home"}
                     </Link>
                 </div>
             </div>
@@ -322,6 +329,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
                     input={input}
                     setInput={setInput}
                     inputRef={inputRef}
+                    locale={locale}
                 />
             ) : (
                 <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
@@ -338,11 +346,12 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
                                     msg={msg}
                                     onOpenScenario={onOpenScenario}
                                     onRequestAccess={(prompt) => demo.request("ai-builder", `Proyecto solicitado: ${prompt}`)}
+                                    locale={locale}
                                 />
                             ))}
                             {busy && thread[thread.length - 1]?.role !== "assistant" && (
                                 <div className="flex justify-center text-white/30 font-mono text-[10px] tracking-widest uppercase animate-pulse">
-                                    procesando ...
+                                    {locale === "es" ? "procesando ..." : "processing ..."}
                                 </div>
                             )}
                         </div>
@@ -361,7 +370,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
                                     type="text"
                                     value={input}
                                     onChange={e => setInput(e.target.value)}
-                                    placeholder={busy ? "Esperando respuesta..." : "Pregúntame algo más..."}
+                                    placeholder={busy ? (locale === "es" ? "Esperando respuesta..." : "Waiting for a response...") : (locale === "es" ? "Pregúntame algo más..." : "Ask me something else...")}
                                     disabled={busy}
                                     className="flex-1 bg-transparent outline-none text-[13px] text-white placeholder:text-white/30 font-mono"
                                 />
@@ -371,7 +380,7 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
                                     className="shrink-0 inline-flex items-center gap-2 px-3.5 py-2 bg-[#00f0ff] text-black font-mono text-[11px] font-bold tracking-wider uppercase disabled:opacity-30 disabled:pointer-events-none hover:bg-[#33f3ff] transition-colors"
                                 >
                                     <Send size={11} />
-                                    Enviar
+                                    {locale === "es" ? "Enviar" : "Send"}
                                 </button>
                             </form>
                         </div>
@@ -390,13 +399,15 @@ export default function ChatWelcomeFlow({ onOpenScenario }: Props) {
 
 // ─── WelcomeHero (initial screen) ───────────────────────────────
 function WelcomeHero({
-    onSubmit, input, setInput, inputRef,
+    onSubmit, input, setInput, inputRef, locale,
 }: {
     onSubmit: (p?: string) => void;
     input: string;
     setInput: (v: string) => void;
     inputRef: React.RefObject<HTMLInputElement | null>;
+    locale: "es" | "en";
 }) {
+    const suggestions = locale === "es" ? SUGGESTIONS_ES : SUGGESTIONS_EN;
     const ref = useRef<HTMLDivElement>(null);
     useGSAP(() => {
         gsap.from(".w-eyebrow", { opacity: 0, y: 12, duration: 0.5, ease: "power2.out", delay: 0.1 });
@@ -415,7 +426,7 @@ function WelcomeHero({
                 <div className="w-eyebrow inline-flex items-center gap-2 mb-10 px-3 py-1.5 border border-[#00f0ff]/25 bg-[#00f0ff]/[0.06]">
                     <Sparkles size={11} className="text-[#00f0ff]" />
                     <span className="font-mono text-[10px] tracking-[0.32em] uppercase text-[#00f0ff]">
-                        Demo interactiva · acceso por solicitud
+                        {locale === "es" ? "Demo interactiva · acceso por solicitud" : "Interactive demo · access by request"}
                     </span>
                 </div>
 
@@ -424,7 +435,7 @@ function WelcomeHero({
                     className="w-title text-[clamp(34px,5vw,52px)] leading-[1.05] tracking-tight text-white mb-5 font-bold"
                     style={{ fontFamily: "var(--font-display)", textTransform: "uppercase" }}
                 >
-                    ¿Qué quieres construir{" "}
+                    {locale === "es" ? "¿Qué quieres construir" : "What do you want to build"}{" "}
                     <span className="text-[#00f0ff] inline-flex items-baseline">
                         hoy<span className="w-cursor inline-block w-[3px] h-[0.85em] bg-[#00f0ff] ml-1" />
                     </span>
@@ -432,7 +443,7 @@ function WelcomeHero({
 
                 {/* Sub */}
                 <p className="w-sub text-[14px] text-white/45 leading-relaxed max-w-xl mx-auto mb-10">
-                    Cuéntame tu idea. Yo genero el plan, las conexiones, los componentes y el curso para aprender.
+                    {locale === "es" ? "Cuéntame tu idea. Yo genero el plan, las conexiones, los componentes y el curso para aprender." : "Describe your idea. I will prepare the plan, connections, components, and a learning path."}
                 </p>
 
                 {/* Input */}
@@ -447,7 +458,7 @@ function WelcomeHero({
                             type="text"
                             value={input}
                             onChange={e => setInput(e.target.value)}
-                            placeholder={DEMO_RC_PROMPT}
+                            placeholder={locale === "es" ? "Quiero hacer un carro RC con sensores" : "I want to build an RC car with sensors"}
                             className="flex-1 bg-transparent outline-none text-[13px] text-white placeholder:text-white/30 font-mono"
                             autoFocus
                         />
@@ -457,14 +468,14 @@ function WelcomeHero({
                             className="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-[#00f0ff] text-black font-mono text-[11px] font-bold tracking-wider uppercase disabled:opacity-30 disabled:pointer-events-none hover:bg-[#33f3ff] transition-colors"
                         >
                             <Send size={11} />
-                            Empezar
+                            {locale === "es" ? "Empezar" : "Start"}
                         </button>
                     </div>
                 </form>
 
                 {/* Suggestion chips */}
                 <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
-                    {SUGGESTIONS.map(s => (
+                    {suggestions.map(s => (
                         <button
                             key={s.label}
                             onClick={() => onSubmit(s.prompt)}
@@ -484,11 +495,12 @@ function WelcomeHero({
 
 // ─── ThreadItem (each message bubble) ───────────────────────────
 function ThreadItem({
-    msg, onOpenScenario, onRequestAccess,
+    msg, onOpenScenario, onRequestAccess, locale,
 }: {
     msg: FlowMsg;
     onOpenScenario: (scenario: AIScenario) => void;
     onRequestAccess: (prompt: string) => void;
+    locale: "es" | "en";
 }) {
     if (msg.role === "user") {
         return (
@@ -501,24 +513,24 @@ function ThreadItem({
     }
 
     // assistant variants
-    if (msg.type === "thinking") return <ThinkingBubble />;
+    if (msg.type === "thinking") return <ThinkingBubble locale={locale} />;
 
     if (msg.type === "text") return <TextBubble fullText={msg.content} done={msg.done ?? false} />;
 
     if (msg.type === "scenario-card") return <ScenarioCard scenario={msg.scenario} done={msg.done ?? false} />;
 
-    if (msg.type === "parts-card") return <PartsCard parts={msg.parts} done={msg.done ?? false} />;
+    if (msg.type === "parts-card") return <PartsCard parts={msg.parts} done={msg.done ?? false} locale={locale} />;
 
     if (msg.type === "kits-card") return <KitsCard kitIds={msg.kitIds} done={msg.done ?? false} />;
 
     if (msg.type === "courses-card") return <CoursesCard courseIds={msg.courseIds} done={msg.done ?? false} />;
 
     if (msg.type === "open-builder-cta") return (
-        <OpenBuilderCTA scenario={msg.scenario} onOpen={() => onOpenScenario(msg.scenario)} />
+        <OpenBuilderCTA scenario={msg.scenario} onOpen={() => onOpenScenario(msg.scenario)} locale={locale} />
     );
 
     if (msg.type === "access-card") return (
-        <DemoAccessCard onRequest={() => onRequestAccess(msg.prompt)} />
+        <DemoAccessCard onRequest={() => onRequestAccess(msg.prompt)} locale={locale} />
     );
 
     return null;
@@ -543,7 +555,7 @@ function AvatarBubble({ children, accent }: { children: React.ReactNode; accent?
     );
 }
 
-function ThinkingBubble() {
+function ThinkingBubble({ locale }: { locale: "es" | "en" }) {
     return (
         <AvatarBubble>
             <div className="inline-flex items-center gap-2 bg-[#0d0d12] border border-white/8 px-3 py-2">
@@ -556,7 +568,7 @@ function ThinkingBubble() {
                         />
                     ))}
                 </span>
-                <span className="text-[11px] text-white/45 tracking-wide">Analizando tu proyecto</span>
+                <span className="text-[11px] text-white/45 tracking-wide">{locale === "es" ? "Analizando tu proyecto" : "Analyzing your project"}</span>
             </div>
         </AvatarBubble>
     );
@@ -613,7 +625,7 @@ function ScenarioCard({ scenario, done }: { scenario: AIScenario; done: boolean 
     );
 }
 
-function PartsCard({ parts, done }: { parts: { partId: string; qty: number; reason?: string }[]; done: boolean }) {
+function PartsCard({ parts, done, locale }: { parts: { partId: string; qty: number; reason?: string }[]; done: boolean; locale: "es" | "en" }) {
     const resolved = parts
         .map(p => ({ ...p, component: MOCK_COMPONENTS.find(c => c.id === p.partId) }))
         .filter(p => p.component) as { partId: string; qty: number; reason?: string; component: Part }[];
@@ -656,9 +668,9 @@ function PartsCard({ parts, done }: { parts: { partId: string; qty: number; reas
                 </div>
 
                 <div className="flex items-center justify-between text-[10px] text-white/40">
-                    <span>· Todo en stock en Dystronic</span>
+                    <span>· {locale === "es" ? "Todo en stock en Dystronic" : "All items in stock at Dystronic"}</span>
                     <Link href="/store" className="text-[#f43f5e]/85 hover:text-[#f43f5e] font-mono uppercase tracking-widest flex items-center gap-1">
-                        Ver catálogo <ChevronRight size={10} />
+                        {locale === "es" ? "Ver catálogo" : "View catalog"} <ChevronRight size={10} />
                     </Link>
                 </div>
             </div>
@@ -750,7 +762,7 @@ function CoursesCard({ courseIds, done }: { courseIds: string[]; done: boolean }
     );
 }
 
-function OpenBuilderCTA({ scenario, onOpen }: { scenario: AIScenario; onOpen: () => void }) {
+function OpenBuilderCTA({ scenario, onOpen, locale }: { scenario: AIScenario; onOpen: () => void; locale: "es" | "en" }) {
     return (
         <AvatarBubble>
             <button
@@ -763,9 +775,9 @@ function OpenBuilderCTA({ scenario, onOpen }: { scenario: AIScenario; onOpen: ()
                         <Workflow size={20} className="text-[#00f0ff]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[10px] uppercase tracking-widest text-[#00f0ff]/70 font-bold mb-0.5">Diagrama listo</p>
+                        <p className="text-[10px] uppercase tracking-widest text-[#00f0ff]/70 font-bold mb-0.5">{locale === "es" ? "Diagrama listo" : "Diagram ready"}</p>
                         <p className="text-[14px] font-bold text-white truncate">{scenario?.projectName ?? "Tu proyecto"}</p>
-                        <p className="text-[11px] text-white/45 mt-0.5">Abre el board interactivo · arrastra componentes · ve detalles</p>
+                        <p className="text-[11px] text-white/45 mt-0.5">{locale === "es" ? "Abre el board interactivo · arrastra componentes · ve detalles" : "Open the interactive board · move components · inspect details"}</p>
                     </div>
                     <ArrowRight size={16} className="text-[#00f0ff] group-hover:translate-x-1 transition-transform shrink-0" />
                 </div>
@@ -776,17 +788,17 @@ function OpenBuilderCTA({ scenario, onOpen }: { scenario: AIScenario; onOpen: ()
     );
 }
 
-function DemoAccessCard({ onRequest }: { onRequest: () => void }) {
+function DemoAccessCard({ onRequest, locale }: { onRequest: () => void; locale: "es" | "en" }) {
     return (
         <AvatarBubble accent="#39ff14">
             <div className="w-full max-w-[90%] border border-[#39ff14]/25 bg-[#39ff14]/[0.045] p-4 sm:flex sm:items-center sm:gap-4">
                 <div className="flex-1">
                     <div className="mb-1 flex items-center gap-2 text-[#39ff14]">
                         <Unlock size={12} />
-                        <span className="text-[9px] font-bold uppercase tracking-[0.22em]">Modo demo</span>
+                        <span className="text-[9px] font-bold uppercase tracking-[0.22em]">{locale === "es" ? "Modo demo" : "Demo mode"}</span>
                     </div>
                     <p className="text-[12px] leading-relaxed text-white/65">
-                        Prueba el flujo con este proyecto. Solicita acceso para generar proyectos propios con IA y activar el checkout.
+                        {locale === "es" ? "Prueba el flujo con este proyecto. Solicita acceso para generar proyectos propios con IA y activar el checkout." : "Try the complete flow with this project. Request access to generate custom AI projects and activate checkout."}
                     </p>
                 </div>
                 <button
@@ -794,7 +806,7 @@ function DemoAccessCard({ onRequest }: { onRequest: () => void }) {
                     onClick={onRequest}
                     className="mt-3 inline-flex w-full shrink-0 items-center justify-center gap-2 bg-[#39ff14] px-3 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wider text-black transition-colors hover:bg-[#62ff47] sm:mt-0 sm:w-auto"
                 >
-                    Solicitar acceso
+                    {locale === "es" ? "Solicitar acceso" : "Request access"}
                     <ArrowRight size={11} />
                 </button>
             </div>

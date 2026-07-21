@@ -12,13 +12,23 @@ Dystronic existed before Build Week. The submission work is documented in commit
 
 ### Competition demo
 
-[![Watch the 82-second Dystronic product demo](artifacts/demo/dystronic-demo-cover.jpg)](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-build-week-demo.mp4)
+[![Watch the 95-second Dystronic product demo](artifacts/demo/dystronic-demo-cover.jpg)](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-build-week-demo.mp4)
 
-**[Watch the full 82-second demo with English narration →](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-build-week-demo.mp4)**
+**[Watch the full 95-second demo with English narration →](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-build-week-demo.mp4)**
 
 The recording follows one continuous flow: idea → generated plan → wiring graph → mechanical dimensions → build instructions → bill of materials → checkout access.
 
 **[Download the Devpost-ready image gallery →](artifacts/gallery)** — seven 3:2 JPGs covering the same product journey, each under 250 KB.
+
+Suggested English captions for Devpost:
+
+1. **Dystronic learning platform** — A unified workspace for discovering electronics projects, components, kits, courses, and community builds.
+2. **AI-guided project planning** — A plain-language idea becomes a structured, catalog-grounded electronics project plan.
+3. **Interactive wiring graph** — Explore component relationships, signal paths, power connections, and the complete bill of materials.
+4. **Mechanical layout validation** — Inspect every component as a dimensioned volume before committing to a physical build.
+5. **Step-by-step build instructions** — Follow an ordered assembly guide tied directly to the selected tools and components.
+6. **Purchase-ready bill of materials** — Review availability, quantities, and estimated cost without leaving the project workflow.
+7. **Demo access and checkout handoff** — Request the complete AI and commerce experience from the public, keyless demonstration.
 
 ### What is new during Build Week
 
