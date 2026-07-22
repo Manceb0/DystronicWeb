@@ -46,4 +46,6 @@ artifacts/demo/page@*.webm
 artifacts/demo/*.webm
 artifacts/demo/*.wav
 artifacts/demo/contact-sheet.png
+artifacts/demo/pitch-overview.png
+artifacts/demo/v3/
 scripts/record-demo.cjs

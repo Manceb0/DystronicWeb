@@ -12,11 +12,13 @@ Dystronic existed before Build Week. The submission work is documented in commit
 
 ### Competition demo
 
-[![Watch the 95-second Dystronic product demo](artifacts/demo/dystronic-demo-cover.jpg)](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-build-week-demo.mp4)
+[![Watch the 96-second Dystronic pitch demo](artifacts/demo/dystronic-pitch-v3-cover.jpg)](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-pitch-v3.mp4)
 
-**[Watch the full 95-second demo with English narration →](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-build-week-demo.mp4)**
+**[Watch the 96-second V3 pitch with natural English narration →](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-pitch-v3.mp4)**
 
-The recording follows one continuous flow: idea → generated plan → wiring graph → mechanical dimensions → build instructions → bill of materials → checkout access.
+The pitch follows one continuous story: fragmented project execution → the Dystronic system → AI-generated plan → wiring graph → mechanical dimensions → build instructions → bill of materials → transparent demo architecture. English subtitles are burned in for silent playback.
+
+The earlier product walkthrough remains available as an [alternate demo](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-build-week-demo.mp4).
 
 **[Download the Devpost-ready image gallery →](artifacts/gallery)** — seven 3:2 JPGs covering the same product journey, each under 250 KB.
 
