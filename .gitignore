@@ -48,4 +48,5 @@ artifacts/demo/*.wav
 artifacts/demo/contact-sheet.png
 artifacts/demo/pitch-overview.png
 artifacts/demo/v3/
+artifacts/demo/v4/
 scripts/record-demo.cjs

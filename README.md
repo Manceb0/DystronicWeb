@@ -12,13 +12,13 @@ Dystronic existed before Build Week. The submission work is documented in commit
 
 ### Competition demo
 
-[![Watch the 96-second Dystronic pitch demo](artifacts/demo/dystronic-pitch-v3-cover.jpg)](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-pitch-v3.mp4)
+[![Watch the 96-second Dystronic editorial pitch](artifacts/demo/dystronic-pitch-v4-cover.jpg)](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-pitch-v4.mp4)
 
-**[Watch the 96-second V3 pitch with natural English narration →](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-pitch-v3.mp4)**
+**[Watch the 96-second editorial pitch with natural English narration →](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-pitch-v4.mp4)**
 
-The pitch follows one continuous story: fragmented project execution → the Dystronic system → AI-generated plan → wiring graph → mechanical dimensions → build instructions → bill of materials → transparent demo architecture. English subtitles are burned in for silent playback.
+The pitch uses original editorial diagrams to explain one continuous story: fragmented project execution → the Dystronic system → AI-generated plan → wiring graph → mechanical dimensions → build instructions → bill of materials → transparent demo architecture. Every product screen and burned-in subtitle is in English.
 
-The earlier product walkthrough remains available as an [alternate demo](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-build-week-demo.mp4).
+The [V3 dark pitch](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-pitch-v3.mp4) and the earlier [product walkthrough](https://raw.githubusercontent.com/Manceb0/DystronicWeb/master/artifacts/demo/dystronic-build-week-demo.mp4) remain available as alternate demos.
 
 **[Download the Devpost-ready image gallery →](artifacts/gallery)** — seven 3:2 JPGs covering the same product journey, each under 250 KB.
 
